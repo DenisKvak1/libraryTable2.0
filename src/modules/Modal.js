@@ -4,7 +4,7 @@ import { appendChild } from "../helpers/appendRemoveChildDOMElements";
 export class Modal {
   constructor(content, idContent = "basicIdContent", destroyMode = false) {
     this.destroyMode = destroyMode;
-    this.createStyles();
+    this.#createStyles();
 
     this.modal = createElement("div", ["modal"]);
 
@@ -29,7 +29,7 @@ export class Modal {
     appendChild(document.body, this.overlay);
   }
 
-  createStyles() {
+  #createStyles() {
     const style = createElement("style", ["modalStyle"]);
     style.innerHTML = `
         body {
