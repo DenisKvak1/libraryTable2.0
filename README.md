@@ -1,5 +1,7 @@
 # libraryTable2.0
  
+Обращение к библотеке производится через обьект " TableLibrary "
+
 Class Table - 
 
 Аргументы:
