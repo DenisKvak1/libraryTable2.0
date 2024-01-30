@@ -118,12 +118,4 @@ export class Modal {
   setMaxHeight(maxHeight) {
     this.modal.style.maxHeight = maxHeight;
   }
-
-  setFontFamily(font) {
-    this.modalContent.style.fontFamily = font;
-  }
-
-  setFontSize(size) {
-    this.modalContent.style.fontSize = `${size}px`;
-  }
 }
