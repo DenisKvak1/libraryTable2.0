@@ -68,9 +68,6 @@ export class Table {
     appendChild(this.tableElement, thead);
     appendChild(this.tableElement, tbody);
 
-    const headerRow = createElement("tr", ["headerTable"]);
-    appendChild(thead, headerRow);
-
     this.theadElement = thead;
     this.tbodyElement = tbody;
 
