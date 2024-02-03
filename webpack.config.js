@@ -1,43 +1,36 @@
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+
+const PROJECT_NAME = "TableLibrary";
+
 module.exports = {
-    mode: 'production',
-    entry: './src/index.js',
-    devServer: {
-        static: path.join(__dirname, 'src'),
-        watchFiles: path.join(__dirname, 'src'),
-        compress: true,
-        port: 3000,
-        hot: true,
-        liveReload: true
-    },
+    entry: path.resolve(__dirname, 'src'),
+
     output: {
-        path: path.resolve(__dirname, 'dist'),
-        filename: 'TableLibrary.js',
-        library: 'TableLibrary',
+        filename: `${PROJECT_NAME}.js`,
+        path: path.resolve(path.join(__dirname, `./builds/${PROJECT_NAME}`)),
         libraryTarget: 'umd',
-        globalObject: 'this',
+        library: `${PROJECT_NAME}`,
+        globalObject: 'this'
     },
+
+    resolve: {
+        extensions: ['.ts', '.tsx', '.js', '.json']
+    },
+
     module: {
         rules: [
             {
-                test: /\.js$/,
-                exclude: /node_modules/,
-                use: {
-                    loader: 'babel-loader',
-                },
-            },
-            {
-                test: /\.css$/,
-                use: ['style-loader', 'css-loader'],
-            },
-        ],
+                test: /\.(ts|js)x?$/,
+                use: [
+                    {loader: 'babel-loader'},
+                    {loader: 'ts-loader'}
+                ],
+                exclude: /node_modules/
+            }],
     },
+
     plugins: [
-        new HtmlWebpackPlugin({
-            template: './src/index.html',
-            inject: 'head',
-            scriptLoading: 'blocking'
-        }),
-    ],
+        new ForkTsCheckerWebpackPlugin(),
+    ]
 };
