@@ -27,7 +27,6 @@ export class Table implements iTable{
       this.tableData = data;
       this.containerElement = document.getElementById(id);
       this.renderMain();
-      this.createStyles();
       this.observable = new Observable();
 
     }
@@ -161,33 +160,6 @@ export class Table implements iTable{
       }
     };
 
-  private createStyles():void {
-    const style:HTMLElement = createElement("style", ["tableStyle"]);
-    const existingStyle:HTMLElement = document.head.querySelector(".tableStyle");
-
-    if (!existingStyle) {
-      style.className = "tableStyle";
-      style.innerHTML = `
-          *{
-            box-sizing: border-box;
-          }
-          .myTable {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-          }
-          .footerTable {
-            background-color: rgba(128, 128, 128, 0.1);
-          }
-          .myTable td, .myTable th {
-            padding: 0 20px;
-            height: 40px;
-            border: 1px solid black;
-          }
-        `;
-      appendChild(document.head, style);
-    }
-  }
 
   pushRow():void {
     if (this.responseValid) {

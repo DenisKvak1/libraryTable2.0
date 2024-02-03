@@ -47,7 +47,6 @@ export class Chart implements iChart{
     this.circleRadius = 3;
     this.columnColor = "rgba(53, 53, 53, 0.575)";
     this.columnBorder = "0.5px solid rgba(53, 53, 53, 0.9)";
-    this.createStyles();
     this.renderBase();
     this.setChartType(this.chartType);
   }
@@ -59,8 +58,8 @@ export class Chart implements iChart{
     appendChild(this.container, this.chartContainer);
   }
   private setContainerSize():void {
-    this.chartContainer.style.width = this.size.width + "px";
-    this.chartContainer.style.height = this.size.height + "px";
+    this.chartContainer.style.width = this.size.width+55 + "px";
+    this.chartContainer.style.height = this.size.height+45 + "px";
   }
 
   private renderSvg():void {
@@ -191,28 +190,6 @@ export class Chart implements iChart{
     }
   }
 
-  private createStyles():void {
-    const style:HTMLElement = createElement("style", ["chartStyle"]);
-    const existingStyle:HTMLElement = document.head.querySelector(".chartStyle");
-
-    if (!existingStyle) {
-      style.className = "tableStyle";
-      style.innerHTML = `
-          .containerChart{
-            padding: 20px 20px 25px 35px;
-          }
-          .containerChart svg{
-            overflow: visible;
-            position: absolute;
-          }
-          .containerChart .columnContainer{
-            display: flex;
-            align-items: flex-end;
-          }
-        `;
-      appendChild(document.head, style);
-    }
-  }
 
   private findMaxNumberInArray(arr: Array<number>):null | number {
     if (arr.length === 0) {
