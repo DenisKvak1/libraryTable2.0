@@ -1,5 +1,6 @@
 const path = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 const PROJECT_NAME = "TableLibrary";
 
@@ -13,7 +14,10 @@ module.exports = {
         library: `${PROJECT_NAME}`,
         globalObject: 'this'
     },
-
+    devServer: {
+        static: path.resolve(__dirname, `./src`),
+        port: 8080,
+    },
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.json']
     },
@@ -41,5 +45,10 @@ module.exports = {
 
     plugins: [
         new ForkTsCheckerWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            template: './src/index.html',
+            inject: 'head',
+            scriptLoading: 'blocking'
+        })
     ]
 };

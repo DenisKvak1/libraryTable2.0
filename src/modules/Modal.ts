@@ -1,18 +1,19 @@
-import {createElement} from "../helpers/createDOMElements";
-import {appendChild} from "../helpers/appendRemoveChildDOMElements";
-import {iModal} from "../env/types";
+import { createElement } from "../helpers/createDOMElements";
+import { appendChild } from "../helpers/appendRemoveChildDOMElements";
+import { iModal } from "../env/types";
 
-export class Modal implements iModal{
-  destroyMode:boolean
-  modal: HTMLElement
-  modalContent: HTMLElement
-  overlay: HTMLElement
-  constructor(content:HTMLElement | SVGElement | string, idContent:string = "basicIdContent", destroyMode:boolean = false) {
+export class Modal implements iModal {
+  destroyMode: boolean;
+  modal: HTMLElement;
+  modalContent: HTMLElement;
+  overlay: HTMLElement;
+
+  constructor(content: HTMLElement | SVGElement | string, idContent: string = "basicIdContent", destroyMode: boolean = false) {
     this.destroyMode = destroyMode;
 
     this.modal = createElement("div", ["modal"]);
 
-    const closeBtn:HTMLElement = createElement("span", ["close-btn"]);
+    const closeBtn: HTMLElement = createElement("span", ["close-btn"]);
     closeBtn.innerHTML = "&times;";
     closeBtn.addEventListener("click", () => this.closeModal());
 
@@ -34,13 +35,13 @@ export class Modal implements iModal{
   }
 
 
-  openModal():void {
+  openModal(): void {
     document.body.style.overflow = "hidden";
     this.modal.style.display = "block";
     this.overlay.style.display = "block";
   }
 
-  closeModal():void {
+  closeModal(): void {
     document.body.style.overflow = "initial";
     this.modal.style.display = "none";
     this.overlay.style.display = "none";
@@ -50,19 +51,19 @@ export class Modal implements iModal{
     }
   }
 
-  setBackGroundColorModal(color:string):void {
+  setBackGroundColorModal(color: string): void {
     this.modal.style.backgroundColor = color;
   }
 
-  setBackGroundColorOverlay(color:string):void {
+  setBackGroundColorOverlay(color: string): void {
     this.overlay.style.backgroundColor = color;
   }
 
-  setMaxWidth(maxWidth:string):void {
+  setMaxWidth(maxWidth: string): void {
     this.modal.style.maxWidth = maxWidth;
   }
 
-  setMaxHeight(maxHeight:string):void {
+  setMaxHeight(maxHeight: string): void {
     this.modal.style.maxHeight = maxHeight;
   }
 }

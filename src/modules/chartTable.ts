@@ -2,13 +2,14 @@ import { createElement, createElementSvg } from "../helpers/createDOMElements";
 import { appendChild } from "../helpers/appendRemoveChildDOMElements";
 import { errorProcessing } from "../helpers/errorProcessing";
 import { iChart } from "../env/types";
+import { getElementById } from "../helpers/getDOMElementById";
 
 type size = {
   width: number,
   height: number
 }
 
-export class Chart implements iChart{
+export class Chart implements iChart {
   containerId: string;
   chartData: Array<number>;
   headerData: Array<string>;
@@ -38,7 +39,7 @@ export class Chart implements iChart{
     this.size = size;
     this.chartType = chartType;
     this.markCount = 10;
-    this.markColor = "a0a0a0";
+    this.markColor = "#a0a0a0";
     this.markWidth = 0.1;
     this.markTextColor = "rgba(53, 53, 53, 0.9)";
     this.lineColor = "rgb(69, 97, 255)";
@@ -51,42 +52,50 @@ export class Chart implements iChart{
     this.setChartType(this.chartType);
   }
 
-  private renderBase():void {
-    this.container = document.getElementById(this.containerId);
+  private renderBase(): void {
+    let container = getElementById(this.containerId);
+    if (container instanceof HTMLElement) {
+      this.container = container;
+    } else {
+      errorProcessing(container);
+    }
     this.chartContainer = createElement("div", ["containerChart"]);
     this.setContainerSize();
     appendChild(this.container, this.chartContainer);
   }
-  private setContainerSize():void {
-    this.chartContainer.style.width = this.size.width+55 + "px";
-    this.chartContainer.style.height = this.size.height+45 + "px";
+
+  private setContainerSize(): void {
+    this.chartContainer.style.width = this.size.width + 55 + "px";
+    this.chartContainer.style.height = this.size.height + 45 + "px";
   }
 
-  private renderSvg():void {
-    const svgElement:SVGElement = createElementSvg("svg");
+  private renderSvg(): void {
+    const svgElement: SVGElement = createElementSvg("svg");
     svgElement.setAttribute("width", `${this.size.width}`);
     svgElement.setAttribute("height", `${this.size.height}`);
     appendChild(this.chartContainer, svgElement);
     this.svgContainer = svgElement;
   }
 
-  private renderColumnChart():void {
+  private renderColumnChart(): void {
     this.chartColumnContainer = createElement("div", ["columnContainer"]);
     appendChild(this.chartContainer, this.chartColumnContainer);
 
     this.renderMarks();
 
-    this.chartData.forEach((item:number):void => {
-      const columnElement:HTMLElement = createElement("div");
+    for (let i = 0; i < this.chartData.length; i++) {
+      const item = this.chartData[i];
+      const columnElement: HTMLElement = createElement("div");
       columnElement.style.height = (this.size.height / this.findMaxNumberInArray(this.chartData)) * item + "px";
       columnElement.style.width = this.size.width / this.chartData.length + "px";
       columnElement.style.background = this.columnColor;
       columnElement.style.border = this.columnBorder;
       appendChild(this.chartColumnContainer, columnElement);
-    });
+    }
+
   }
 
-  private renderLineChart():void {
+  private renderLineChart(): void {
     if (!this.svgLineContainer) {
       this.svgLineContainer = createElementSvg("g", ["svgLineContainer"]);
       appendChild(this.svgContainer, this.svgLineContainer);
@@ -97,13 +106,14 @@ export class Chart implements iChart{
       this.svgContainer.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
     }
 
-    this.chartData.forEach((item, index):void => {
-      let x:number = (this.size.width / (this.chartData.length - 1)) * index;
-      let y:number  = this.size.height - (this.size.height / (this.findMaxNumberInArray(this.chartData) - this.findMinNumberInArray(this.chartData))) * (item - this.findMinNumberInArray(this.chartData));
-      let x2:number  = index + 1 < this.chartData.length ? (this.size.width / (this.chartData.length - 1)) * (index + 1) : 0;
-      let y2:number  = index + 1 < this.chartData.length ? this.size.height - (this.size.height / (this.findMaxNumberInArray(this.chartData) - this.findMinNumberInArray(this.chartData))) * (this.chartData[index + 1] - this.findMinNumberInArray(this.chartData)) : 0;
+    for (let index = 0; index < this.chartData.length; index++) {
+      const item = this.chartData[index];
+      let x: number = (this.size.width / (this.chartData.length - 1)) * index;
+      let y: number = this.size.height - (this.size.height / (this.findMaxNumberInArray(this.chartData) - this.findMinNumberInArray(this.chartData))) * (item - this.findMinNumberInArray(this.chartData));
+      let x2: number = index + 1 < this.chartData.length ? (this.size.width / (this.chartData.length - 1)) * (index + 1) : 0;
+      let y2: number = index + 1 < this.chartData.length ? this.size.height - (this.size.height / (this.findMaxNumberInArray(this.chartData) - this.findMinNumberInArray(this.chartData))) * (this.chartData[index + 1] - this.findMinNumberInArray(this.chartData)) : 0;
 
-      let lineElement:SVGElement = createElementSvg("line");
+      let lineElement: SVGElement = createElementSvg("line");
       lineElement.setAttribute("x1", `${x}`);
       lineElement.setAttribute("y1", `${y}`);
       lineElement.setAttribute("x2", `${x2}`);
@@ -111,7 +121,7 @@ export class Chart implements iChart{
       lineElement.setAttribute("stroke", this.lineColor);
       lineElement.setAttribute("stroke-width", `${this.lineWidth}`);
 
-      let circleElement:SVGElement = createElementSvg("circle");
+      let circleElement: SVGElement = createElementSvg("circle");
       circleElement.setAttribute("cx", `${x}`);
       circleElement.setAttribute("cy", `${y}`);
       circleElement.setAttribute("r", `${this.circleRadius}`);
@@ -121,25 +131,26 @@ export class Chart implements iChart{
         appendChild(this.svgLineContainer, lineElement);
       }
       appendChild(this.svgLineContainer, circleElement);
-    });
+    }
+
 
     if (!this.svgMarksContainer) {
       this.renderMarks();
     }
   }
 
-  private renderMarks():void {
+  private renderMarks(): void {
     if (!this.svgMarksContainer) {
       this.svgMarksContainer = createElementSvg("g", ["svgMarksContainer"]);
       appendChild(this.svgContainer, this.svgMarksContainer);
     }
-    for (let index:number = 0; index <= this.markCount; index++) {
-      let markingX:number = 0;
-      let markingY:number = this.size.height - (this.size.height / this.markCount) * index;
+    for (let index: number = 0; index <= this.markCount; index++) {
+      let markingX: number = 0;
+      let markingY: number = this.size.height - (this.size.height / this.markCount) * index;
 
-      let markingX2:number = this.size.width;
-      let markingY2:number = this.size.height - (this.size.height / this.markCount) * index;
-      let lineElement:SVGElement = createElementSvg("line");
+      let markingX2: number = this.size.width;
+      let markingY2: number = this.size.height - (this.size.height / this.markCount) * index;
+      let lineElement: SVGElement = createElementSvg("line");
       lineElement.setAttribute("x1", `${markingX}`);
       lineElement.setAttribute("y1", `${markingY}`);
       lineElement.setAttribute("x2", `${markingX2}`);
@@ -154,32 +165,32 @@ export class Chart implements iChart{
     this.renderYAxis();
   }
 
-  private renderXAxis():void {
-    this.chartData.forEach((_item, index) => {
-      let textX:number = (this.size.width / (this.chartData.length - 1)) * index - 10;
-      let textY:number = this.size.height + 25;
-      let textElement:SVGElement = createElementSvg("text");
+  private renderXAxis(): void {
+    for (let index = 0; index < this.chartData.length; index++) {
+      let textX: number = (this.size.width / (this.chartData.length - 1)) * index - 10;
+      let textY: number = this.size.height + 25;
+      let textElement: SVGElement = createElementSvg("text");
       textElement.setAttribute("x", `${textX}`);
       textElement.setAttribute("y", `${textY}`);
       textElement.setAttribute("font-size", "15px");
       textElement.setAttribute("fill", this.markTextColor);
       textElement.textContent = this.headerData[index];
       appendChild(this.svgMarksContainer, textElement);
-    });
+    }
   }
 
-  private renderYAxis():void {
-    const minNumber:number = this.findMinNumberInArray(this.chartData);
-    const maxNumber:number = this.findMaxNumberInArray(this.chartData);
+  private renderYAxis(): void {
+    const minNumber: number = this.findMinNumberInArray(this.chartData);
+    const maxNumber: number = this.findMaxNumberInArray(this.chartData);
 
-    for (let index:number = 0; index <= this.markCount; index++) {
+    for (let index: number = 0; index <= this.markCount; index++) {
 
-      let textX:number = 0 - 30;
-      let textY:number = this.size.height - (this.size.height / this.markCount) * index + 5;
-      let textMark:number = Math.round((((maxNumber - minNumber) / this.markCount) * index + minNumber) * 100) / 100;
+      let textX: number = 0 - 30;
+      let textY: number = this.size.height - (this.size.height / this.markCount) * index + 5;
+      let textMark: number = Math.round((((maxNumber - minNumber) / this.markCount) * index + minNumber) * 100) / 100;
 
 
-      let textElement:SVGElement = createElementSvg("text");
+      let textElement: SVGElement = createElementSvg("text");
       textElement.setAttribute("x", `${textX}`);
       textElement.setAttribute("y", `${textY}`);
       textElement.setAttribute("font-size", "15px");
@@ -191,12 +202,12 @@ export class Chart implements iChart{
   }
 
 
-  private findMaxNumberInArray(arr: Array<number>):null | number {
+  private findMaxNumberInArray(arr: Array<number>): null | number {
     if (arr.length === 0) {
       return null;
     }
-    let maxNumber:number = arr[0];
-    for (let i:number = 1; i < arr.length; i++) {
+    let maxNumber: number = arr[0];
+    for (let i: number = 1; i < arr.length; i++) {
       if (arr[i] > maxNumber) {
         maxNumber = arr[i];
       }
@@ -205,12 +216,12 @@ export class Chart implements iChart{
     return maxNumber;
   }
 
-  private findMinNumberInArray(arr: Array<number>):null | number {
+  private findMinNumberInArray(arr: Array<number>): null | number {
     if (arr.length === 0) {
       return null;
     }
-    let minNumber:number = arr[0];
-    for (let i:number = 1; i < arr.length; i++) {
+    let minNumber: number = arr[0];
+    for (let i: number = 1; i < arr.length; i++) {
       if (arr[i] < minNumber) {
         minNumber = arr[i];
       }
@@ -218,7 +229,7 @@ export class Chart implements iChart{
     return minNumber;
   }
 
-  setChartType(chartType: string):void {
+  setChartType(chartType: string): void {
     if (chartType === "line") {
       this.chartContainer.innerHTML = "";
       this.svgMarksContainer = null;
@@ -234,7 +245,7 @@ export class Chart implements iChart{
     }
   }
 
-  setChartData(chartData: Array<number>, headerData: Array<string>):void {
+  setChartData(chartData: Array<number>, headerData: Array<string>): void {
     if (Array.isArray(chartData) && chartData.length >= 2) {
       this.headerData = headerData;
       this.chartData = chartData;
@@ -245,19 +256,20 @@ export class Chart implements iChart{
     }
   }
 
-  setMarkColor(color: string):void {
+  setMarkColor(color: string): void {
     this.markColor = color;
     if (this.svgMarksContainer) {
-      let children:Array<Element> = Array.from(this.svgMarksContainer.children).filter((item) => item.tagName === "line");
+      let children: Array<Element> = Array.from(this.svgMarksContainer.children).filter((item) => item.tagName === "line");
       if (children.length > 0) {
-        children.forEach((markElement) => {
+        for (let i = 0; i < children.length; i++) {
+          const markElement = children[i];
           markElement.setAttribute("stroke", this.markColor);
-        });
+        }
       }
     }
   }
 
-  setMarkCount(count: number):void {
+  setMarkCount(count: number): void {
     if (typeof count === "number" && count > 2) {
       this.markCount = count;
       this.svgMarksContainer.remove();
@@ -268,98 +280,106 @@ export class Chart implements iChart{
     }
   }
 
-  setMarkWidth(width: number):void {
+  setMarkWidth(width: number): void {
     this.markWidth = width;
     if (this.svgMarksContainer) {
-      let children:Array<Element> = Array.from(this.svgMarksContainer.children).filter((item) => item.tagName === "line");
+      let children: Array<Element> = Array.from(this.svgMarksContainer.children).filter((item) => item.tagName === "line");
       if (children.length > 0) {
-        children.forEach((markElement) => {
+        for (let i = 0; i < children.length; i++) {
+          const markElement = children[i];
           markElement.setAttribute("stroke-width", `${this.markWidth}`);
-        });
+        }
       }
     }
   }
 
-  setMarkTextColor(color: string):void {
+  setMarkTextColor(color: string): void {
     this.markTextColor = color;
     if (this.svgMarksContainer) {
-      let children:Array<Element> = Array.from(this.svgMarksContainer.children).filter((item) => item.tagName === "text");
+      let children: Array<Element> = Array.from(this.svgMarksContainer.children).filter((item) => item.tagName === "text");
       if (children.length > 0) {
-        children.forEach((markElement) => {
+        for (let i = 0; i < children.length; i++) {
+          const markElement = children[i];
           markElement.setAttribute("fill", this.markTextColor);
-        });
+        }
       }
     }
   }
 
-  setLineColor(color: string):void {
+  setLineColor(color: string): void {
     this.lineColor = color;
     if (this.svgLineContainer) {
-      let children:Array<Element> = Array.from(this.svgLineContainer.children).filter((item) => item.tagName === "line");
+      let children: Array<Element> = Array.from(this.svgLineContainer.children).filter((item) => item.tagName === "line");
       if (children.length > 0) {
-        children.forEach((lineElement) => {
+        for (let i = 0; i < children.length; i++) {
+          const lineElement = children[i];
           lineElement.setAttribute("stroke", this.lineColor);
-        });
+        }
       }
     }
   }
 
-  setLineWidth(width: number):void {
+  setLineWidth(width: number): void {
     this.lineWidth = width;
     if (this.svgLineContainer) {
-      let children:Array<Element> = Array.from(this.svgLineContainer.children).filter((item) => item.tagName === "line");
+      let children: Array<Element> = Array.from(this.svgLineContainer.children).filter((item) => item.tagName === "line");
       if (children.length > 0) {
-        children.forEach((lineElement) => {
+        for (let i = 0; i < children.length; i++) {
+          const lineElement = children[i];
           lineElement.setAttribute("stroke-width", `${this.lineWidth}`);
-        });
+        }
       }
     }
   }
 
-  setCircleColor(color: string):void {
+  setCircleColor(color: string): void {
     this.circleColor = color;
     if (this.svgLineContainer) {
-      let children:Array<Element> = Array.from(this.svgLineContainer.children).filter((item) => item.tagName === "circle");
+      let children: Array<Element> = Array.from(this.svgLineContainer.children).filter((item) => item.tagName === "circle");
       if (children.length > 0) {
-        children.forEach((circleElement) => {
+        for (let i = 0; i < children.length; i++) {
+          const circleElement = children[i];
           circleElement.setAttribute("fill", this.circleColor);
-        });
+        }
       }
     }
   }
 
-  setCircleRadius(radius: number):void {
+  setCircleRadius(radius: number): void {
     this.circleRadius = radius;
     if (this.svgLineContainer) {
-      let children:Array<Element> = Array.from(this.svgLineContainer.children).filter((item) => item.tagName === "circle");
+      let children: Array<Element> = Array.from(this.svgLineContainer.children).filter((item) => item.tagName === "circle");
       if (children.length > 0) {
-        children.forEach((circleElement) => {
+        for (let i = 0; i < children.length; i++) {
+          const circleElement = children[i];
           circleElement.setAttribute("r", `${this.circleRadius}`);
-        });
+        }
       }
     }
   }
 
-  setColumnColor(color: string):void {
+  setColumnColor(color: string): void {
     this.columnColor = color;
     if (this.chartColumnContainer) {
-      let children:Array<Element> = Array.from(this.chartColumnContainer.children);
+      let children: Array<Element> = Array.from(this.chartColumnContainer.children);
       if (children.length > 0) {
-        children.forEach((circleElement:HTMLElement) => {
+        for (let i = 0; i < children.length; i++) {
+          const circleElement = children[i] as HTMLElement;
           circleElement.style.backgroundColor = this.columnColor;
-        });
+        }
       }
     }
   }
 
-  setColumnBorder(borderData: string):void {
+  setColumnBorder(borderData: string): void {
     this.columnBorder = borderData;
     if (this.chartColumnContainer) {
-      let children:Array<Element> = Array.from(this.chartColumnContainer.children);
+      let children: Array<Element> = Array.from(this.chartColumnContainer.children);
       if (children.length > 0) {
-        children.forEach((columnElement:HTMLElement) => {
+        for (let i = 0; i < children.length; i++) {
+          const columnElement = children[i] as HTMLElement;
           columnElement.style.border = this.columnBorder;
-        });
+        }
       }
     } else {
       errorProcessing("Неверный формат данных границы. Пожалуйста, укажите строковый формат.");
@@ -367,7 +387,7 @@ export class Chart implements iChart{
 
   }
 
-  setChartWidth(width:number):void {
+  setChartWidth(width: number): void {
     if (typeof width === "number" && width > 0) {
       this.size.width = width;
       this.chartContainer.innerHTML = "";
@@ -378,7 +398,7 @@ export class Chart implements iChart{
     }
   }
 
-  setChartHeight(height:number):void {
+  setChartHeight(height: number): void {
     if (typeof height === "number" && height > 0) {
       this.size.height = height;
       this.chartContainer.innerHTML = "";

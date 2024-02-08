@@ -1,18 +1,22 @@
 import { createElement } from "./createDOMElements";
-import {Modal} from "../modules/Modal";
-import {iModal} from "../env/types";
+import { Modal } from "../modules/Modal";
+import { iModal } from "../env/types";
 
-export function errorProcessing(errorText:Array<string>|string):void {
-  let errorElement:HTMLElement = createElement("h2");
+export function errorProcessing(errorText: Array<string> | string): void {
+  const errorElement: HTMLElement = createElement("h2");
   errorElement.style.color = "red";
-  if (Array.isArray((errorText))) {
-    errorText.forEach((errorLine) => {
+
+  if (Array.isArray(errorText)) {
+    for (let index = 0; index < errorText.length; index++) {
+      const errorLine = errorText[index];
       console.log(errorLine);
       errorElement.innerHTML += `${errorLine}<br>`;
-    });
+    }
   } else {
     errorElement.innerHTML = errorText;
   }
-  let modal:iModal = new Modal(errorElement, "error-modal-content", true);
+
+  const modal: iModal = new Modal(errorElement, "error-modal-content", true);
   modal.openModal();
 }
+
