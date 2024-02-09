@@ -228,21 +228,26 @@ export class Chart implements iChart {
     }
     return minNumber;
   }
-
-  setChartType(chartType: string): void {
-    if (chartType === "line") {
+  private chartTypeMethods: Record<string, () => void> = {
+    line: () => {
       this.chartContainer.innerHTML = "";
       this.svgMarksContainer = null;
       this.svgLineContainer = null;
       this.renderSvg();
       this.renderLineChart();
-    } else if (chartType === "column") {
+    },
+    column: () => {
       this.chartContainer.innerHTML = "";
       this.svgMarksContainer = null;
       this.svgLineContainer = null;
       this.renderSvg();
       this.renderColumnChart();
-    }
+    },
+  };
+  setChartType(chartType: string): void {
+   if(this.chartTypeMethods[chartType]){
+     this.chartTypeMethods[chartType]()
+   }
   }
 
   setChartData(chartData: Array<number>, headerData: Array<string>): void {

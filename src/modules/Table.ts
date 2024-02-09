@@ -12,15 +12,15 @@ export type tableData = {
 }
 
 export class Table implements iTable {
-  id: string;
-  tableData: tableData;
-  responseValid: Boolean;
-  containerElement: HTMLElement;
-  observable: iObservable;
-  tableElement: HTMLElement;
-  theadElement: HTMLElement;
-  tbodyElement: HTMLElement;
-  tFooterElement: HTMLElement;
+  private readonly id: string;
+  private tableData: tableData;
+  private readonly responseValid: boolean;
+  private readonly containerElement: HTMLElement;
+  private observable: iObservable;
+  private tableElement: HTMLElement;
+  private theadElement: HTMLElement;
+  private tbodyElement: HTMLElement;
+  private tFooterElement: HTMLElement;
 
   constructor(id: string, data: tableData) {
     this.responseValid = this.validate(id, data);
@@ -39,7 +39,7 @@ export class Table implements iTable {
     }
   }
 
-  private validate(id: string, data: tableData): Boolean {
+  private validate(id: string, data: tableData): boolean {
     // Проверка наличия id и его типа
     if (!(getElementById(id))) {
       errorProcessing("Неверный ID. Укажите действительный идентификатор строки.");
@@ -70,7 +70,7 @@ export class Table implements iTable {
       return false;
     }
 
-    function validateFormatData(obj: tableData): Boolean {
+    function validateFormatData(obj: tableData): boolean {
       const headerLength: number = obj.header.length;
       return headerLength > 0 && obj.body.every(subarray => subarray.length === headerLength);
     }
@@ -110,17 +110,13 @@ export class Table implements iTable {
     for (let indexUp = 0; indexUp < this.tableData.body.length; indexUp++) {
       const tr: HTMLElement = createElement("tr");
       for (let index = 0; index < this.tableData.body[indexUp].length; index++) {
-        const td: HTMLElement = createElement("td");
-        if (index === 0) {
-          this.renderTdAction(td, index, indexUp);
+        let td:HTMLElement
+        if(index===0){
+          td = this.createTd(index, indexUp, true)
         } else {
-          td.textContent = this.tableData.body[indexUp][index];
-          td.contentEditable = "true";
+          td = this.createTd(index, indexUp, false)
         }
-        td.onmouseleave = this.cellChange;
-        td.onblur = this.cellChange;
-        td.onmouseout = this.cellChange;
-        td.onkeydown = this.listenChangeCellOnKey;
+
         appendChild(tr, td);
       }
       appendChild(this.tbodyElement, tr);
@@ -132,65 +128,88 @@ export class Table implements iTable {
     if (this.tableData.footer) {
       const tfoot: HTMLElement = createElement("tfoot");
       this.tFooterElement = tfoot;
+
       const td: HTMLElement = createElement("td", ["footerTable"]);
       td.textContent = this.tableData.footer;
+
       appendChild(tfoot, td);
       appendChild(this.tableElement, tfoot);
     }
   }
-  private renderTdAction(td:HTMLElement, index:number, indexUp:number){
+  private createTd(index:number, indexUp:number, buttonAction:boolean = false){
+    const td: HTMLElement = createElement("td");
     const tdContainer = createElement("div", ["tdCont"]);
+
     tdContainer.addEventListener("mouseout", (event) => {
       event.stopPropagation();
     });
+
     let textNode: HTMLElement = createElement("div", ["tdTextNode"]);
-    let tdPopperAddCont1: HTMLElement = createElement("div", ["tdPopperAddCont", "bottom5"]);
-    let tdPopperAddCont2: HTMLElement = createElement("div", ["tdPopperAddCont", "top5"]);
-    let tdPopperRemoveCont1: HTMLElement = createElement("div", ["tdPopperRemoveCont"]);
-    let tdPopperAdd1: HTMLElement = createElement("div", ["tdPopperAdd"]);
-    let tdPopperAdd2: HTMLElement = createElement("div", ["tdPopperAdd"]);
-    let tdPopperRemove1: HTMLElement = createElement("div", ["tdPopperRemove"]);
-    let tdAddRowBtn: HTMLElement = createElement("button");
-    let tdAddRowBtn2: HTMLElement = createElement("button");
-    let tdRemoveRowBtn: HTMLElement = createElement("button");
-    tdAddRowBtn.innerHTML = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d=\"M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z\"/></svg>";
-    tdAddRowBtn2.innerHTML = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d=\"M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z\"/></svg>";
-    tdRemoveRowBtn.innerHTML = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill=\"#1e2633\" d=\"M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z\"/></svg>";
-    tdAddRowBtn.onclick = () => {
-      td.onblur = null;
-      setTimeout(() => td.onblur = this.cellChange, 0);
-      this.insertRow(indexUp + 1);
-    };
-    tdAddRowBtn2.onclick = () => {
-      td.onblur = null;
-      setTimeout(() => td.onblur = this.cellChange, 0);
-      this.insertRow(indexUp + 2);
-    };
-    tdRemoveRowBtn.onclick = () => {
-      td.onblur = null;
-      setTimeout(() => td.onblur = this.cellChange, 0);
-      this.deleteRow(indexUp + 1);
-    };
-    document.addEventListener("DOMSubtreeModified", (): void => {
-      tdPopperAdd1.style.top = `${-(tdPopperAdd1.offsetHeight / 2)}px`;
-      tdPopperAdd2.style.bottom = `${-(tdPopperAdd1.offsetHeight / 2 - 1)}px`;
-    });
+    let tdPopperAddCont1: HTMLElement
+    let tdPopperAddCont2: HTMLElement
+    let tdPopperRemoveCont1: HTMLElement
+    let tdPopperAdd1: HTMLElement
+    let tdPopperAdd2: HTMLElement
+    let tdPopperRemove1: HTMLElement
+    let tdAddRowBtn: HTMLElement
+    let tdAddRowBtn2: HTMLElement
+    let tdRemoveRowBtn: HTMLElement
+
+    if(buttonAction){
+      tdPopperAddCont1 = createElement("div", ["tdPopperAddCont", "bottom5"]);
+      tdPopperAddCont2 = createElement("div", ["tdPopperAddCont", "top5"]);
+      tdPopperRemoveCont1 = createElement("div", ["tdPopperRemoveCont"]);
+      tdPopperAdd1 = createElement("div", ["tdPopperAdd"]);
+      tdPopperAdd2 = createElement("div", ["tdPopperAdd"]);
+      tdPopperRemove1 = createElement("div", ["tdPopperRemove"]);
+      tdAddRowBtn = createElement("button");
+      tdAddRowBtn2 = createElement("button");
+      tdRemoveRowBtn = createElement("button");
+      tdAddRowBtn.innerHTML = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d=\"M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z\"/></svg>";
+      tdAddRowBtn2.innerHTML = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d=\"M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z\"/></svg>";
+      tdRemoveRowBtn.innerHTML = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 448 512\"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill=\"#1e2633\" d=\"M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z\"/></svg>";
+      tdAddRowBtn.onclick = () => {
+
+        this.insertRow(indexUp + 1);
+      };
+      tdAddRowBtn2.onclick = () => {
+        this.insertRow(indexUp + 2);
+      };
+      tdRemoveRowBtn.onclick = () => {
+        this.deleteRow(indexUp + 1);
+      };
+      document.addEventListener("DOMSubtreeModified", (): void => {
+        tdPopperAdd1.style.top = `${-(tdPopperAdd1.offsetHeight / 2)}px`;
+        tdPopperAdd2.style.bottom = `${-(tdPopperAdd1.offsetHeight / 2 - 1)}px`;
+      });
+    }
+
     textNode.textContent = this.tableData.body[indexUp][index];
     textNode.contentEditable = "true";
 
-    appendChild(tdPopperRemove1, tdRemoveRowBtn);
-    appendChild(tdPopperRemoveCont1, tdPopperRemove1);
-    appendChild(tdPopperAdd1, tdAddRowBtn);
-    appendChild(tdPopperAdd2, tdAddRowBtn2);
-    appendChild(tdPopperAddCont1, tdPopperAdd1);
-    appendChild(tdPopperAddCont2, tdPopperAdd2);
+    textNode.onblur = (event:Event)=>this.cellChange(event, true)
+    td.onmouseleave = this.cellChange;
+    td.onmouseout = this.cellChange;
+    td.onkeydown = this.listenChangeCellOnKey;
+    if(buttonAction){
+      appendChild(tdPopperRemove1, tdRemoveRowBtn);
+      appendChild(tdPopperRemoveCont1, tdPopperRemove1);
+      appendChild(tdPopperAdd1, tdAddRowBtn);
+      appendChild(tdPopperAdd2, tdAddRowBtn2);
+      appendChild(tdPopperAddCont1, tdPopperAdd1);
+      appendChild(tdPopperAddCont2, tdPopperAdd2);
+      appendChild(tdContainer, tdPopperRemoveCont1);
+      appendChild(tdContainer, tdPopperAddCont1);
+    }
 
-    appendChild(tdContainer, tdPopperRemoveCont1);
-    appendChild(tdContainer, tdPopperAddCont1);
     appendChild(tdContainer, textNode);
-    appendChild(tdContainer, tdPopperAddCont2);
+
+    if(buttonAction) {
+      appendChild(tdContainer, tdPopperAddCont2);
+    }
 
     appendChild(td, tdContainer);
+    return td
   }
   private createTh(index:number, headerCellText:string){
     const th: HTMLElement = createElement("th");
@@ -237,7 +256,7 @@ export class Table implements iTable {
 
     textNode.textContent = headerCellText;
 
-    let isResizing: Boolean = false;
+    let isResizing: boolean = false;
     let direction:string
     let lastDownX:number = 0;
 
@@ -248,6 +267,7 @@ export class Table implements iTable {
         } else if (event.target === thPopperAddCont2) {
           direction = 'right'
         }
+
       isResizing = true;
       document.addEventListener('mousemove', handleResize)
       document.addEventListener("mouseup", stopResize);
@@ -291,21 +311,20 @@ export class Table implements iTable {
     appendChild(th, thContainer);
     return th
   }
-  private cellChange = (event: Event): void => {
-    const targetElement: HTMLElement = event.target as HTMLElement;
+  private cellChange = (event: Event, blur:boolean = false): void => {
+    let targetElement: HTMLElement = event.target as HTMLElement;
+    if(blur){
+      targetElement = targetElement.parentNode.parentNode as HTMLElement
+    }
     let elementsArrayX = Array.from((targetElement.parentNode as Element).children);
     let elementsArrayY = Array.from((targetElement.parentNode as Element).parentNode!.children);
     let indexX = elementsArrayX.indexOf(targetElement);
     let indexY = elementsArrayY.indexOf(targetElement.parentNode as Element);
     if (targetElement.textContent !== this.tableData.body[indexY][indexX]) {
       this.tableData.body[indexY][indexX] = targetElement.textContent;
-      if(targetElement.children.length>0){
-        let textNode = targetElement.querySelector('.tdTextNode') as HTMLElement
-        textNode.blur()
-      }
-      if (document.activeElement === targetElement) {
-        targetElement.blur();
-      }
+      let textNode = targetElement.querySelector('.tdTextNode') as HTMLElement
+      textNode.blur()
+
       this.triggerEvent("changeCellContent", {
         x: indexX + 1,
         y: indexY + 1,
@@ -337,11 +356,11 @@ export class Table implements iTable {
       errorProcessing("Не передан header");
     }
   }
-
   insertRow(rowIndex: number): void {
     if (this.responseValid) {
       if (+rowIndex && rowIndex >= 0 && (this.tableData.body[rowIndex - 1] || rowIndex === this.tableData.body.length + 1)) {
         let addRow: Array<string> = [];
+
         for (let i = 0; i < this.tableData.header.length; i++) {
           addRow.push("");
         }
@@ -361,9 +380,11 @@ export class Table implements iTable {
     if (this.responseValid) {
       if (+columnIndex && columnIndex >= 0 && columnHeader && (this.tableData.header[columnIndex - 1]) || columnIndex === this.tableData.header.length + 1) {
         this.tableData.header.splice(columnIndex - 1, 0, columnHeader);
+
         for (let index = 0; index < this.tableData.body.length; index++) {
           this.tableData.body[index].splice(columnIndex - 1, 0, "");
         }
+
         this.tbodyElement.innerHTML = "";
         this.theadElement.innerHTML = "";
         this.renderHeader();
@@ -381,6 +402,7 @@ export class Table implements iTable {
         this.tableData.body.splice(rowIndex - 1, 1);
         this.tbodyElement.innerHTML = "";
         this.renderBody();
+
         this.triggerEvent("removeRow", { y: rowIndex });
       } else {
         errorProcessing("Не корректные координаты для удаление ряда");
@@ -395,6 +417,7 @@ export class Table implements iTable {
         for (let index = 0; index < this.tableData.body.length; index++) {
           this.tableData.body[index].splice(columnIndex - 1, 1);
         }
+
         this.tbodyElement.innerHTML = "";
         this.theadElement.innerHTML = "";
         this.renderHeader();
@@ -411,6 +434,7 @@ export class Table implements iTable {
       if (this.tableData.body[rowIndex - 1]) {
         let formatError: boolean = false;
         let errorArray: Array<string> = [];
+
         for (let index = 0; index < this.tableData.body[rowIndex - 1].length; index++) {
           const item = this.tableData.body[rowIndex - 1][index];
           if (!(+item)) {
@@ -418,6 +442,7 @@ export class Table implements iTable {
             errorArray.push(`В ячейке y:${rowIndex} x:${index + 1} не число`);
           }
         }
+
         if (!formatError) {
           let numberData: Array<number> = this.tableData.body[rowIndex - 1].map((item) => +item ? +item : 0);
           let headerData: Array<string> = this.tableData.header;
@@ -430,7 +455,7 @@ export class Table implements iTable {
   }
 
   setTable(tableData: tableData): void {
-    let thisResponseValid: Boolean = this.validate(this.id, tableData);
+    let thisResponseValid: boolean = this.validate(this.id, tableData);
     if (this.responseValid && thisResponseValid) {
       if (JSON.stringify(tableData) !== JSON.stringify(this.tableData)) {
         this.tableData = tableData;

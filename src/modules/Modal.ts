@@ -3,10 +3,10 @@ import { appendChild } from "../helpers/appendRemoveChildDOMElements";
 import { iModal } from "../env/types";
 
 export class Modal implements iModal {
-  destroyMode: boolean;
-  modal: HTMLElement;
-  modalContent: HTMLElement;
-  overlay: HTMLElement;
+  private readonly destroyMode: boolean;
+  private readonly modal: HTMLElement;
+  private readonly modalContent: HTMLElement;
+  private readonly overlay: HTMLElement;
 
   constructor(content: HTMLElement | SVGElement | string, idContent: string = "basicIdContent", destroyMode: boolean = false) {
     this.destroyMode = destroyMode;

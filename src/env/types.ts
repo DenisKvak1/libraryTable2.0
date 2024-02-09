@@ -1,15 +1,6 @@
 import {tableData} from "../modules/Table";
 
 export type iTable = {
-    id: string
-    tableData: tableData
-    responseValid : Boolean
-    containerElement: HTMLElement
-    tableElement: HTMLElement
-    theadElement : HTMLElement
-    tbodyElement : HTMLElement
-    tFooterElement : HTMLElement
-    observable : iObservable
     pushRow: ()=>void
     pushColumn: (header: string)=> void
     insertRow: (rowIndex: number)=>void
@@ -21,10 +12,6 @@ export type iTable = {
     subscribe: (eventName:string, callback:(eventData: any) => void)=> void
 }
 export type iModal={
-    destroyMode:boolean
-    modal: HTMLElement
-    modalContent: HTMLElement
-    overlay: HTMLElement
     openModal: ()=>void
     closeModal: ()=>void
     setBackGroundColorModal: (color:string)=>void
