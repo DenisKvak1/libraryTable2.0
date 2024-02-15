@@ -1,0 +1,12 @@
+
+.containerChart{
+    padding: 20px 20px 25px 35px;
+}
+.containerChart svg{
+    overflow: visible;
+    position: absolute;
+}
+.containerChart .columnContainer{
+    display: flex;
+    align-items: flex-end;
+}

@@ -1,0 +1,21 @@
+.createChartContainer {
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.createChartContainer>.createChartButton {
+    height: 21px;
+    padding: 0 10px;
+    border-radius: 5px;
+    background: grey;
+    white-space: nowrap;
+    width: auto;
+    color: #eaeaea;
+    border: 0.3px solid black;
+}
+.controlPanel{
+    display: flex;
+    gap: 5px;
+}
