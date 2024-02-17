@@ -7,7 +7,6 @@ export class Observable<T> implements iObservable<T> {
   constructor(startValue?:T) {
     this.value = startValue
     this.listeners = [];
-    this.value = null;
   }
 
   subscribe(callback: (eventData?: T) => void): { unsubscribe: () => void } {
