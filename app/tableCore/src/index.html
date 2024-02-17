@@ -16,17 +16,20 @@
   <div id="123" class="tableCont">
   </div>
 </div>
+
+
 <script>
 
-  let tableController = new TableLibrary.TableController('123', {
+
+  let tableController = new TableController('123', {
     header: ['123', '123d', '00', '1','4','3',],
     body: [['1ddddddddddddddddddddddd', '', '3', '','4','5'], ['21', '22', '23', '22','24','25'], ['31', '32', '33', '32','34','35']],
     footer: 'Футер'
   })
-  let modal = new TableLibrary.ModalPlugin
-  let eP = new TableLibrary.ErrorProcessing
-  let cc = new TableLibrary.ChartControl
-  let chart = new TableLibrary.ChartPlugin
+  let modal = new ModalPlugin
+  let eP = new ErrorProcessingPlugin
+  let cc = new ChartControl
+  let chart = new ChartPlugin
   tableController.addPlugin(cc)
   tableController.addPlugin(eP)
   tableController.addPlugin(modal)
@@ -38,7 +41,7 @@
   setTimeout(()=>{
     tableController.addPlugin(modal)
     tableController.addPlugin(chart)
-  }, 3000)
+  }, 7000)
 
   setTimeout(()=>{
     tableController.table.setTable({

@@ -34,16 +34,9 @@ export class ChartControl implements iChartControl {
                 let buttonChart = createElement("button", ["createChartButton"]);
                 let inputChart: HTMLInputElement = createElement("input", ["createChartInput"]) as HTMLInputElement;
 
-                let modalPluginInfo = controller.getPlugin("modal");
-                if (!modalPluginInfo.isPresent) {
-                    this.error$.next("Плагин модального окно не подключен")
-                    return
-                }
+                let modalPluginInfo  = controller.getPlugin("modal");
                 let chartPluginInfo = controller.getPlugin("chart");
-                if (!chartPluginInfo.isPresent) {
-                    this.error$.next("Плагин отрисовки графика не подключен")
-                    return
-                }
+
                 let modalPlugin: iModalPlugin = modalPluginInfo.plugin as iModalPlugin;
                 let chartPlugin: iChartPlugin = chartPluginInfo.plugin as iChartPlugin;
                 let chart: iChart = chartPlugin.createChart({data: [], header: []});

@@ -9,10 +9,7 @@ module.exports = {
 
     output: {
         filename: `${PROJECT_NAME}.js`,
-        path: path.resolve(path.join(__dirname, `./builds/${PROJECT_NAME}`)),
-        libraryTarget: 'umd',
-        library: `${PROJECT_NAME}`,
-        globalObject: 'this'
+        path: path.resolve(path.join(__dirname, `../../builds/${PROJECT_NAME}`)),
     },
     devServer: {
         static: path.resolve(__dirname, `./src`),

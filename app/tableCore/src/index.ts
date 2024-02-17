@@ -7,4 +7,5 @@ import { ChartControl } from "../../controlChartPlugin/src/index"
 import { ChartPlugin } from "../../chartPlugin/src/index"
 
 (window as any).TableController = TableController;
-export { Table, ErrorProcessing,ChartControl,ChartPlugin, ModalPlugin,TableController };
+
+export { Table, ErrorProcessing,ChartControl,ChartPlugin, ModalPlugin,TableController }; // для Dev mode
