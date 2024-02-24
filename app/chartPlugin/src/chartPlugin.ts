@@ -1,21 +1,26 @@
-import {iChart, iChartPlugin, iObservable, pluginSTATE} from "../../../env/types";
+import {iChart, iChartPlugin, iObservable, iTableController, PLUGIN_STATE} from "../../../env/types";
 import {Observable} from "../../../env/helpers/observable";
 import {Chart} from "./modules/Chart";
 
 export class ChartPlugin implements iChartPlugin{
   name: string
-  error$: iObservable<string | Array<string>>;
-  state$: iObservable<pluginSTATE>
+  state$: iObservable<PLUGIN_STATE>
   constructor() {
     this.name = "chart"
-    this.error$ = new Observable<string | Array<string>>()
-    this.state$ = new Observable<pluginSTATE>(pluginSTATE.INITIALIZED)
+    this.state$ = new Observable<PLUGIN_STATE>(PLUGIN_STATE.INITIALIZED)
   }
   createChart(chartData:{header:Array<string>, data:Array<number>}):iChart{
     return new Chart(chartData.data, chartData.header,{width:500, height:300})
   }
-  registration(){
-    this.state$.next(pluginSTATE.LOADED)
+  registration(controller: iTableController){
+    this.state$.next(PLUGIN_STATE.ADDED)
+    this.state$.next(PLUGIN_STATE.PENDING)
+    this.state$.subscribe(()=>{
+      controller.pluginEvent$.next(this)
+    })
+    this.state$.next(PLUGIN_STATE.READY)
   }
-  unRegister(){}
+  unRegister(){
+    this.state$.next(PLUGIN_STATE.REMOVED)
+  }
 }
