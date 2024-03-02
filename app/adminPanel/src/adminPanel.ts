@@ -374,18 +374,7 @@ export class AdminPanel implements iAdminPanel {
 
     actionBtn1.textContent = "По умолчанию";
     actionBtn2.textContent = "Сохранить как";
-    actionBtn1.onclick = () => {
-      for (let i = 0; i < this.options.length; i++) {
-        if (this.options[i].type === "input" || this.options[i].type === "color") {
-          (this.options[i].element.children[1] as HTMLInputElement).value = this.defaultOptions[this.options[i].correspondence] as string;
-        } else if (this.options[i].type === "checkBox") {
-          (this.options[i].element.children[1] as HTMLInputElement).checked = Boolean(this.defaultOptions[this.options[i].correspondence]);
-        } else if(this.options[i].type === "userList"){
-          this.options[i].elementObject.setList(this.defaultOptions[this.options[i].correspondence])
-        }
-      }
-      this.saveOptions();
-    };
+    actionBtn1.onclick = () => this.setOption(this.defaultOptions);
     actionBtn2.onclick = () => {
       this.saveJsonFile.bind(this)(JSON.stringify(this.toTableOptions()));
     };
@@ -471,7 +460,23 @@ export class AdminPanel implements iAdminPanel {
     }
     return resultOptions;
   }
-
+  setOption(options:universalTableOption) {
+    for (let key in options) {
+      let input = this.options.find((item) => item.correspondence === key);
+      if (input) {
+        if (input.type === "color" || input.type === "input") {
+          const inputElement = input.element.children[1] as HTMLInputElement;
+          inputElement.value = options[key] as string;
+        } else if (input.type === "checkBox") {
+          const inputElement = input.element.children[1] as HTMLInputElement;
+          inputElement.checked = options[key] as boolean;
+        } else if(input.type === "userList"){
+          input.elementObject.setList(options[key])
+        }
+      }
+    }
+    this.saveOptions()
+  }
   private async saveJsonFile(fileContent: string) {
     let blob = new Blob([fileContent], { type: "application/json" });
 
@@ -509,24 +514,7 @@ export class AdminPanel implements iAdminPanel {
           if (typeof event.target.result === "string") {
             jsonObject = JSON.parse(event.target.result);
           }
-          for (let key in jsonObject) {
-            let input = this.options.find((item) => item.correspondence === key);
-            if (input) {
-              if (input.type === "color" || input.type === "input") {
-                const inputElement = input.element.children[1] as HTMLInputElement;
-                inputElement.value = jsonObject[key];
-              } else if (input.type === "checkBox") {
-                const inputElement = input.element.children[1] as HTMLInputElement;
-                inputElement.checked = jsonObject[key];
-              } else if(input.type === "userList"){
-                input.elementObject.setList(jsonObject[key])
-              }
-              console.log(jsonObject[key])
-            }
-          }
-          this.saveOptions()
-
-
+          this.setOption(jsonObject)
         } catch (error) {
           this.controller.error$.next(`Ошибка при разборе JSON: ${error}`);
         }
