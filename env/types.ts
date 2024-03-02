@@ -158,7 +158,7 @@ export type iChartPlugin = iPlugin & {
   createChart: (chartData: { header: Array<string>, data: Array<number> }) => iChart
 }
 export  type iAdminPanel = iPlugin & {
-
+  setOption: (options:universalTableOption)=>void
 }
 export type TableOptionFunc = {
   widthVerticalLine: (width: string) => void

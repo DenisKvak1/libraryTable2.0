@@ -453,8 +453,7 @@ export class AdminPanel implements iAdminPanel {
       } else if (this.options[i].type === "checkBox") {
         value = (this.options[i].element.children[1] as HTMLInputElement).checked;
       } else if(this.options[i].type === "userList"){
-        let collection = this.options[i].element.querySelectorAll('.listItem')
-        value = Array.from(collection).map((item)=>item.textContent)
+        value = this.options[i].elementObject.elements$.getValue()
       }
       resultOptions[this.options[i].correspondence] = value;
     }
