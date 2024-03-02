@@ -1,5 +1,6 @@
 import { iModal, iModalPlugin, iObservable, iTableController, PLUGIN_STATE} from "../../../env/types";
 import { Observable } from "../../../env/helpers/observable";
+// @ts-ignore
 import {Modal} from "./modules/Modal";
 
 export class ModalPlugin implements iModalPlugin {

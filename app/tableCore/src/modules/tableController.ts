@@ -5,7 +5,7 @@ import {
   IPluginInfo,
   iTable,
   iTableController,
-  PluginList, 
+  PluginList,
   tableData
 } from "../../../../env/types";
 import {Table} from "./Table";
@@ -16,20 +16,37 @@ export class TableController implements iTableController{
   plugins: PluginList
   error$: iObservable<errorType>
   pluginEvent$: iObservable<iPlugin>
-
+  denyPlugins$: iObservable<Array<string>>
   constructor(id:string, tableData:tableData) {
     this.table = new Table(id, tableData)
     this.error$ = new Observable<errorType>()
     this.pluginEvent$ = new Observable<iPlugin>()
 
+    this.denyPlugins$ = new Observable<Array<string>>([])
     this.table.error$.subscribe((data:errorType)=>{
       this.error$.next(data)
     })
+    let startDenyPlugin = localStorage.getItem('denyPlugin')
+    if(startDenyPlugin){
+      this.denyPlugins$.setValue(JSON.parse(startDenyPlugin))
+    } else {
+      this.denyPlugins$.setValue([])
+    }
+    this.denyPlugins$.subscribe((data)=>{
+      localStorage.setItem('denyPlugin', JSON.stringify(data))
+      for (let key of data){
+        if (this.plugins[key]?.name) {
+          this.plugins[key].unRegister()
+        }
+      }
+    })
+
     this.plugins = {
       errorProcessing: null,
       modal: null,
       chartControl: null,
-      chart: null
+      chart: null,
+      adminPanel: null
     }
   }
   addPlugin(pluginInstance: iPlugin): void {
@@ -37,6 +54,11 @@ export class TableController implements iTableController{
       this.error$.next('Ошибка загрузки плагина');
       return;
     }
+    if(this.denyPlugins$.getValue().includes(pluginInstance.name)){
+      this.error$.next(`Плагин ${pluginInstance.name} заблокирован администратором`);
+      return;
+    }
+
 
     this.plugins[pluginInstance.name] = pluginInstance;
     pluginInstance.registration(this);

@@ -2,14 +2,14 @@ const path = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
-const PROJECT_NAME = "TableLibrary";
+const PROJECT_NAME = "adminPanel";
 
 module.exports = {
-    entry: path.resolve(__dirname, 'src'),
+    entry: path.resolve(__dirname, 'src/index.ts'),
 
     output: {
         filename: `${PROJECT_NAME}.js`,
-        path: path.resolve(path.join(__dirname, `../../builds/${PROJECT_NAME}`)),
+        path: path.resolve(path.join(__dirname, "../../", `./builds/${PROJECT_NAME}`)),
     },
     devServer: {
         static: path.resolve(__dirname, `./src`),
@@ -39,12 +39,8 @@ module.exports = {
                 exclude: /node_modules/
             }],
     },
+
     plugins: [
-        new ForkTsCheckerWebpackPlugin(),
-        new HtmlWebpackPlugin({
-            template: './src/index.html',
-            inject: 'head',
-            scriptLoading: 'blocking'
-        })
+        new ForkTsCheckerWebpackPlugin()
     ]
 };

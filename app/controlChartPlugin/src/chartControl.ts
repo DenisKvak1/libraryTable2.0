@@ -34,7 +34,8 @@ export class ChartControl implements iChartControl {
             this.renderChartControl()
             this.state$.next(PLUGIN_STATE.READY)
         } else {
-            this.controller.pluginEvent$.subscribe(() => {
+            this.controller.pluginEvent$.subscribe((event) => {
+                if (event.name === "chartControl") return
                 let modalInfo = this.controller.getPlugin('modal')
                 let chartInfo = this.controller.getPlugin('chart')
                 if (!modalInfo.isPresent) return
@@ -48,9 +49,13 @@ export class ChartControl implements iChartControl {
         this.controller.pluginEvent$.subscribe((event: iPlugin) => {
             if (event.name === "chartControl") return
             if (this.controller.getPlugin('modal').plugin?.state$.getValue() !== PLUGIN_STATE.READY || this.controller.getPlugin('chart').plugin?.state$.getValue() !== PLUGIN_STATE.READY) {
-                this.unRegister();
+                if(this.state$.getValue() === PLUGIN_STATE.PENDING) return;
+                this.unload()
                 this.state$.next(PLUGIN_STATE.PENDING)
             }
+        })
+        this.state$.subscribe(()=>{
+            this.controller.pluginEvent$.next(this)
         })
     }
 
@@ -101,6 +106,10 @@ export class ChartControl implements iChartControl {
     }
 
     unRegister() {
+        this.state$.next(PLUGIN_STATE.REMOVED)
+        this.unload()
+    }
+    unload(){
         let buttonAction = this.controller.table.tableElement.parentNode.querySelector(".createChartContainer")
         if (buttonAction) {
             buttonAction.remove()

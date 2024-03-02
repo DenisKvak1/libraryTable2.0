@@ -1,6 +1,7 @@
-import {IModalOptions, iModal, iModalOptionsFunc} from "../../../../env/types";
+import { IModalOptions, iModal, iModalOptionsFunc, iObservable } from "../../../../env/types";
 import {createElement} from "../../../../env/helpers/createDOMElements";
 import {appendChild} from "../../../../env/helpers/appendRemoveChildDOMElements";
+import { Observable } from "../../../../env/helpers/observable";
 
 
 export class Modal implements iModal {
@@ -8,8 +9,9 @@ export class Modal implements iModal {
     private readonly modal: HTMLElement;
     private readonly modalContent: HTMLElement;
     private readonly overlay: HTMLElement;
-
+    close$: iObservable<null>
     constructor(content: Element | string, idContent: string = "basicIdContent", destroyMode: boolean = false) {
+        this.close$ = new Observable<null>()
         this.destroyMode = destroyMode;
 
         this.modal = createElement("div", ["modal"]);
@@ -42,7 +44,9 @@ export class Modal implements iModal {
             height: (height: number) => this.modal.style.height = `${height}`,
             maxHeight: (maxHeight: number) => this.modal.style.width = `${maxHeight}`,
             bgColor: (color: string) => this.modal.style.backgroundColor = `${color}`,
-            bgOverlayColor: (color: number) => this.overlay.style.backgroundColor = `${color}`
+            bgOverlayColor: (color: number) => this.overlay.style.backgroundColor = `${color}`,
+            padding: (padding: string)=> this.modal.style.padding = padding,
+            borderRadius: (radius:string)=> this.modal.style.borderRadius = radius
         }
         for (let key in  options){
             if(optionsFunc[key]){
@@ -65,6 +69,7 @@ export class Modal implements iModal {
             this.modal.remove();
             this.overlay.remove();
         }
+        this.close$.next()
     }
 
     destroy() {
