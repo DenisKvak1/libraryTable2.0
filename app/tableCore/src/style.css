@@ -116,7 +116,6 @@ body:has(.thPopperAddCont:hover){
 }
 
 
-
 .textNode{
     text-align: center;
     width: 100%;
@@ -172,14 +171,14 @@ body:has(.thPopperAddCont:hover){
     visibility: initial;
 }
 .left2{
-    left: 2.5px;
+    left: 1px;
 }
 .right2{
-    right: 2.5px;
+    right: 1px;
 }
 .bottom5{
-    bottom: 5.5px;
+    bottom: 1px;
 }
 .top5{
-    top: 5.5px;
+    top: 1px;
 }
