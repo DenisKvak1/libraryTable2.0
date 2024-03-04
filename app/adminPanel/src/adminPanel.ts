@@ -1,11 +1,11 @@
 import {
-  adminPanelOption,
+  adminPanelOption, createOptionKitAP,
   iAdminPanel,
   iModal,
   iModalPlugin,
   iObservable, iPlugin,
   iTableController, IUserList,
-  PLUGIN_STATE,
+  PLUGIN_STATE, toKitOption,
   universalTableOption
 } from "../../../env/types";
 import { createElement } from "../../../env/helpers/createDOMElements";
@@ -21,12 +21,12 @@ export class AdminPanel implements iAdminPanel {
   private modal: iModal;
   private options: Array<adminPanelOption>;
   private readonly startOption: universalTableOption;
-  private createOptionKit: Record<string, any>;
+  private createOptionKit: createOptionKitAP;
   private dropdownContainer: HTMLElement;
   private appearanceOptions: Array<adminPanelOption>;
   private actionOptions: Array<adminPanelOption>;
-  private defaultOptions: Record<string, any>
-
+  private defaultOptions: {[key: string]: any}
+  private adminPanel: HTMLElement
   constructor() {
     let startOption = localStorage.getItem("tableCell");
     let startDenyPlugin = localStorage.getItem("denyPlugin");
@@ -59,7 +59,7 @@ export class AdminPanel implements iAdminPanel {
       showFooter: true
     };
     this.createOptionKit = {
-      input: (options: Record<string, any>) => {
+      input: (options: toKitOption) => {
         let option = createElement("div", ["input_option"]);
         let span = createElement("span");
         let input = createElement("input") as HTMLInputElement;
@@ -67,20 +67,20 @@ export class AdminPanel implements iAdminPanel {
         span.textContent = options.placeholder;
 
         if (options.startValue) {
-          input.value = options.startValue;
+          input.value = options.startValue as string;
         }
         appendChild(option, span);
         appendChild(option, input);
 
         return option;
       },
-      checkBox: (options: Record<string, any>) => {
+      checkBox: (options: toKitOption) => {
         let option = createElement("div", ["checkBox_option"]);
         let span = createElement("span");
         let input = createElement("input", ["checkBox_optionInput"]) as HTMLInputElement;
         input.type = "checkbox";
         span.textContent = options.placeholder;
-        input.checked = options.startValue;
+        input.checked = options.startValue as boolean;
         input.onchange = () => this.saveOptions.bind(this)();
 
         appendChild(option, span);
@@ -88,13 +88,13 @@ export class AdminPanel implements iAdminPanel {
 
         return option;
       },
-      color: (options: Record<string, any>) => {
+      color: (options: toKitOption) => {
         let option = createElement("div", ["input_option"]);
         let span = createElement("span");
         let input = createElement("input", ["input_option"]) as HTMLInputElement;
         input.type = "color";
         span.textContent = options.placeholder;
-        input.value = options.startValue;
+        input.value = options.startValue as string;
         input.onchange = () => this.saveOptions.bind(this)();
 
         appendChild(option, span);
@@ -102,10 +102,10 @@ export class AdminPanel implements iAdminPanel {
 
         return option;
       },
-      userList: (options: Record<string, any>) => {
-        let userList = new UserList(options.placeholder, options.startValue, options.inputOverview, options.buttonOverview);
-        if(options.registerCallback){
-          options.registerCallback(userList)
+      userList: (options: toKitOption) => {
+        let userList = new UserList(options.placeholder, options.startValue as Array<string>, options.inputOverview, options.buttonOverview);
+        if (options.registerCallback) {
+          options.registerCallback(userList);
         }
         let element = userList.createList();
         if (options.color) {
@@ -118,25 +118,21 @@ export class AdminPanel implements iAdminPanel {
       {
         type: "checkBox",
         options: { placeholder: "Показывать вертикальные линии", startValue: true },
-        regExp: "",
         correspondence: "showVerticalLine"
       },
       {
         type: "checkBox",
         options: { placeholder: "Показывать горизонтальные линии", startValue: true },
-        regExp: "",
         correspondence: "showHorizontalLine"
       },
       {
         type: "checkBox",
         options: { placeholder: "Показывать заголовок таблицы", startValue: true },
-        regExp: "",
         correspondence: "showHeader"
       },
       {
         type: "checkBox",
         options: { placeholder: "Показывать футер таблицы", startValue: true },
-        regExp: "",
         correspondence: "showFooter"
       },
       {
@@ -211,37 +207,31 @@ export class AdminPanel implements iAdminPanel {
       {
         type: "checkBox",
         options: { placeholder: "Запретить редактирование ячеек", startValue: false },
-        regExp: "",
         correspondence: "denyEditCell"
       },
       {
         type: "checkBox",
         options: { placeholder: "Запретить изменение размера столбцов", startValue: false },
-        regExp: "",
         correspondence: "denyResizeColumn"
       },
       {
         type: "checkBox",
         options: { placeholder: "Запретить добавление столбцов", startValue: false },
-        regExp: "",
         correspondence: "denyAddColumn"
       },
       {
         type: "checkBox",
         options: { placeholder: "Запретить добавление строк", startValue: false },
-        regExp: "",
         correspondence: "denyAddRow"
       },
       {
         type: "checkBox",
         options: { placeholder: "Запретить удаление столбцов", startValue: false },
-        regExp: "",
         correspondence: "denyRemoveColumn"
       },
       {
         type: "checkBox",
         options: { placeholder: "Запретить удаление строк", startValue: false },
-        regExp: "",
         correspondence: "denyRemoveRow"
       },
       {
@@ -257,10 +247,10 @@ export class AdminPanel implements iAdminPanel {
               userList.elements$.subscribe((data) => {
                 this.controller.denyPlugins$.next(data);
               });
-              this.options.find((item)=>item.correspondence === "denyPlugins").elementObject = userList
+              this.options.find((item) => item.correspondence === "denyPlugins").elementObject = userList;
             }
           },
-        regExp: "",
+        
         correspondence: "denyPlugins"
 
       }
@@ -284,7 +274,7 @@ export class AdminPanel implements iAdminPanel {
 
         let modalInfo = this.controller.getPlugin("modal");
         if (!modalInfo.isPresent) return;
-        if (modalInfo.plugin.state$.getValue() === PLUGIN_STATE.READY && this.state$.getValue() !== PLUGIN_STATE.READY) {
+        if (modalInfo.plugin.state$.getValue() === PLUGIN_STATE.READY && (this.state$.getValue() !== PLUGIN_STATE.READY && this.state$.getValue() !== PLUGIN_STATE.REMOVED)) {
           this.init();
           this.state$.next(PLUGIN_STATE.READY);
         }
@@ -294,6 +284,7 @@ export class AdminPanel implements iAdminPanel {
       if (event.name === "adminPanel") return;
       if (this.controller.getPlugin("modal").plugin?.state$.getValue() !== PLUGIN_STATE.READY) {
         if (this.state$.getValue() === PLUGIN_STATE.PENDING) return;
+        this.unload()
         this.state$.next(PLUGIN_STATE.PENDING);
       }
     });
@@ -303,13 +294,13 @@ export class AdminPanel implements iAdminPanel {
     this.renderOpenPanel();
     if (this.startOption) {
       this.options.forEach((item) => {
-        item.options.startValue = this.startOption[item.correspondence];
+        item.options.startValue = (this.startOption as any)[item.correspondence];
       });
     }
     let modalPlugin = this.controller.getPlugin("modal").plugin as iModalPlugin;
-    let adminPanel = this.createAdminPanel();
+    this.adminPanel = this.createAdminPanel();
 
-    this.modal = modalPlugin.createModal(adminPanel);
+    this.modal = modalPlugin.createModal(this.adminPanel);
     this.modal.close$.subscribe(() => this.dropdownContainer.style.display = "flex");
     this.modal.setOptions({ padding: "0px", borderRadius: "10px" });
   }
@@ -412,8 +403,8 @@ export class AdminPanel implements iAdminPanel {
 
   private renderOptions(block: HTMLElement, options: Array<adminPanelOption>) {
     for (let i = 0; i < options.length; i++) {
-      if (this.createOptionKit[options[i].type]) {
-        let option = this.createOptionKit[options[i].type](options[i].options);
+      if ((this.createOptionKit as any)[options[i].type]) {
+        let option = (this.createOptionKit as any)[options[i].type](options[i].options);
         options[i].element = option;
         appendChild(block, option);
       }
@@ -429,53 +420,57 @@ export class AdminPanel implements iAdminPanel {
   }
 
   private toTableOptions(): void | universalTableOption {
-    let resultOptions: Record<string, any> = {};
-    let error:Array<number> = [];
+    let resultOptions: universalTableOption = {};
+    let error: Array<number> = [];
     for (let i = 0; i < this.options.length; i++) {
       let value: string | Array<string> = (this.options[i].element.children[1] as HTMLInputElement).value;
       const inputValue = value;
-      const regExp = new RegExp(this.options[i].regExp);
-      if (!regExp.test(inputValue)) {
-        error.push(i)
-        this.options[i].element.style.boxShadow = "0 0 10px red";
-      } else {
-        this.options[i].element.style.boxShadow = "initial";
+      if(this.options[i].regExp){
+        const regExp = new RegExp(this.options[i].regExp);
+        if (!regExp.test(inputValue)) {
+          error.push(i);
+          this.options[i].element.style.boxShadow = "0 0 10px red";
+        } else {
+          this.options[i].element.style.boxShadow = "initial";
+        }
       }
     }
 
 
     for (let i = 0; i < this.options.length; i++) {
-      if(error.includes(i)) continue
+      if (error.includes(i)) continue;
 
       let value: string | boolean | Array<string>;
       if (this.options[i].type === "input" || this.options[i].type === "color") {
         value = (this.options[i].element.children[1] as HTMLInputElement).value;
       } else if (this.options[i].type === "checkBox") {
         value = (this.options[i].element.children[1] as HTMLInputElement).checked;
-      } else if(this.options[i].type === "userList"){
-        value = this.options[i].elementObject.elements$.getValue()
+      } else if (this.options[i].type === "userList") {
+        value = this.options[i].elementObject.elements$.getValue();
       }
-      resultOptions[this.options[i].correspondence] = value;
+      (resultOptions as any)[this.options[i].correspondence] = value;
     }
     return resultOptions;
   }
-  setOption(options:universalTableOption) {
+
+  setOption(options: universalTableOption) {
     for (let key in options) {
       let input = this.options.find((item) => item.correspondence === key);
       if (input) {
         if (input.type === "color" || input.type === "input") {
           const inputElement = input.element.children[1] as HTMLInputElement;
-          inputElement.value = options[key] as string;
+          inputElement.value = (options as any)[key] as string;
         } else if (input.type === "checkBox") {
           const inputElement = input.element.children[1] as HTMLInputElement;
-          inputElement.checked = options[key] as boolean;
-        } else if(input.type === "userList"){
-          input.elementObject.setList(options[key])
+          inputElement.checked = (options as any)[key] as boolean;
+        } else if (input.type === "userList") {
+          input.elementObject.setList((options as any)[key]);
         }
       }
     }
-    this.saveOptions()
+    this.saveOptions();
   }
+
   private async saveJsonFile(fileContent: string) {
     let blob = new Blob([fileContent], { type: "application/json" });
 
@@ -508,12 +503,12 @@ export class AdminPanel implements iAdminPanel {
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
-          let jsonObject: Record<string, any>;
+          let jsonObject: {[key: string]: any};
 
           if (typeof event.target.result === "string") {
             jsonObject = JSON.parse(event.target.result);
           }
-          this.setOption(jsonObject)
+          this.setOption(jsonObject);
         } catch (error) {
           this.controller.error$.next(`Ошибка при разборе JSON: ${error}`);
         }
@@ -523,10 +518,15 @@ export class AdminPanel implements iAdminPanel {
     } else {
       this.controller.error$.next("Файл не выбран");
     }
-    fileInput.value = ""
+    fileInput.value = "";
   }
-
+  unload(){
+    this.adminPanel.remove()
+    this.dropdownContainer.remove()
+    this.modal.destroy()
+  }
   unRegister() {
+    this.unload()
     this.state$.next(PLUGIN_STATE.REMOVED);
   }
 }

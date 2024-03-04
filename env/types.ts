@@ -1,4 +1,3 @@
-
 export type CellValue = string;
 export type tableRow = Array<CellValue>;
 export type tableHeader = {
@@ -158,9 +157,13 @@ export type iChartPlugin = iPlugin & {
   createChart: (chartData: { header: Array<string>, data: Array<number> }) => iChart
 }
 export  type iAdminPanel = iPlugin & {
-  setOption: (options:universalTableOption)=>void
+  setOption: (options: universalTableOption) => void
 }
 export type TableOptionFunc = {
+  showHeader: (show: boolean) => void
+  showFooter: (show: boolean) => void
+  showVerticalLine: (show: boolean) => void
+  showHorizontalLine: (show: boolean) => void
   widthVerticalLine: (width: string) => void
   widthHorizontalLine: (width: string) => void
   colorBackgroundHeader: (color: string) => void
@@ -168,9 +171,16 @@ export type TableOptionFunc = {
   colorBackgroundFooter: (color: string) => void
   colorEditableBackgroundCell: (color: string) => void
   colorHeader: (color: string) => void
+  colorBody: (color: string) => void
+  colorFooter: (color: string) => void
   colorEditableCell: (color: string) => void
   colorLine: (color: string) => void
-  [key: string]: (argument: string | number | boolean) => void
+  denyAddColumn: (isDeny: boolean) => void
+  denyAddRow: (isDeny: boolean) => void
+  denyRemoveColumn: (isDeny: boolean) => void
+  denyRemoveRow: (isDeny: boolean) => void
+  denyResizeColumn: (isDeny: boolean) => void
+  denyEditCell: (isDeny: boolean) => void
 }
 
 export type cellOptions = Partial<{
@@ -194,22 +204,26 @@ export type cellOptions = Partial<{
   denyRemoveRow: boolean
   denyResizeColumn: boolean
   denyEditCell: boolean
-  [key: string]: string | boolean
 }>;
 export type TableOptions = Partial<{
-  elementShow?: {
+  elementShow: {
     header: boolean,
     footer: boolean
   }
 }>
-export type universalTableOption = cellOptions & {
-
-}
+export type universalTableOption = cellOptions & {}
 export type adminPanelOption = {
   type: string
-  options: { placeholder: string, startValue: string | boolean | Array<string>,inputOverview?:string, buttonOverview?:string,color?:string,registerCallback?: Function }
+  options: {
+    placeholder: string,
+    startValue: string | boolean | Array<string>,
+    inputOverview?: string,
+    buttonOverview?: string,
+    color?: string,
+    registerCallback?: Function
+  }
   elementObject?: Record<string, any>
-  regExp: string
+  regExp?: string
   correspondence: string
   element?: HTMLElement
 }
@@ -217,14 +231,29 @@ export type IUserList = {
   elements$: iObservable<Array<string>>;
   buttonOverview: string;
   inputOverview: string;
-  setList:(elements: Array<string>)=>void
-  createList: ()=> HTMLElement
-  setTextColor: (color:string)=>void
+  setList: (elements: Array<string>) => void
+  createList: () => HTMLElement
+  setTextColor: (color: string) => void
 }
 export type IInfoList = {
-  setList: (list: Array<string>)=>void
-  createList: ()=> HTMLElement
+  setList: (list: Array<string>) => void
+  createList: () => HTMLElement
 }
+export type createOptionKitAP = {
+  input: (options: Record<string, any>) => void
+  checkBox: (options: Record<string, any>) => void
+  color: (options: Record<string, any>) => void
+  userList: (options: Record<string, any>) => void
+}
+export type toKitOption = {
+  placeholder: string,
+  startValue: string | boolean | Array<string>,
+  inputOverview?: string,
+  buttonOverview?: string,
+  color?: string,
+  registerCallback?: Function
+}
+
 export const enum PLUGIN_STATE {
   INITIALIZED = "INITIALIZED",
   ADDED = "ADDED",

@@ -346,8 +346,8 @@ export class Table implements iTable {
     let cellOptions: cellOptions = {};
 
     for (let key in options) {
-      if (optionsFunc[key]) {
-        optionsFunc[key](options[key]);
+      if ((optionsFunc as any)[key]) {
+        (optionsFunc as any)[key]((options as any)[key]);
       }
     }
     this.cellOptions = cellOptions

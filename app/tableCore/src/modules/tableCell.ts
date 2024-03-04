@@ -290,12 +290,12 @@ export default class TableCell implements iTableCell {
     this.cell = th;
     for (let key in this.options) {
       if (this.optionsFuncTh[key]) {
-        this.optionsFuncTh[key](this.options[key]);
+        this.optionsFuncTh[key]((this.options as any)[key]);
       }
     }
     for (let key in this.options) {
       if (this.universalOptionFunc[key]) {
-        this.universalOptionFunc[key](this.options[key]);
+        this.universalOptionFunc[key]((this.options as any)[key]);
       }
     }
     return th;
@@ -384,12 +384,12 @@ export default class TableCell implements iTableCell {
     this.cell = td;
     for (let key in this.options) {
       if (this.optionsFuncTd[key]) {
-        this.optionsFuncTd[key](this.options[key]);
+        this.optionsFuncTd[key]((this.options as any)[key]);
       }
     }
     for (let key in this.options) {
       if (this.universalOptionFunc[key]) {
-        this.universalOptionFunc[key](this.options[key]);
+        this.universalOptionFunc[key]((this.options as any)[key]);
       }
     }
     return td;
@@ -401,12 +401,12 @@ export default class TableCell implements iTableCell {
     this.cell = tf;
     for (let key in this.options) {
       if (this.optionsFuncTf[key]) {
-        this.optionsFuncTf[key](this.options[key]);
+        this.optionsFuncTf[key]((this.options as any)[key]);
       }
     }
     for (let key in this.options) {
       if (this.universalOptionFunc[key]) {
-        this.universalOptionFunc[key](this.options[key]);
+        this.universalOptionFunc[key]((this.options as any)[key]);
       }
     }
     return tf;
