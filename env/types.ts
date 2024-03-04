@@ -227,7 +227,7 @@ export type adminPanelOption = {
   correspondence: string
   element?: HTMLElement
 }
-export type IUserList = {
+export type IactionList = {
   elements$: iObservable<Array<string>>;
   buttonOverview: string;
   inputOverview: string;
@@ -243,7 +243,7 @@ export type createOptionKitAP = {
   input: (options: Record<string, any>) => void
   checkBox: (options: Record<string, any>) => void
   color: (options: Record<string, any>) => void
-  userList: (options: Record<string, any>) => void
+  actionList: (options: Record<string, any>) => void
 }
 export type toKitOption = {
   placeholder: string,

@@ -4,15 +4,15 @@ import {
   iModal,
   iModalPlugin,
   iObservable, iPlugin,
-  iTableController, IUserList,
+  iTableController, IactionList,
   PLUGIN_STATE, toKitOption,
   universalTableOption
 } from "../../../env/types";
 import { createElement } from "../../../env/helpers/createDOMElements";
 import { Observable } from "../../../env/helpers/observable";
-import { UserList } from "./modules/userList";
 import { InfoList } from "./modules/infoList";
 import { appendChild } from "../../../env/helpers/appendRemoveChildDOMElements";
+import { ActionList } from "./modules/userList";
 
 export class AdminPanel implements iAdminPanel {
   name: string;
@@ -20,7 +20,7 @@ export class AdminPanel implements iAdminPanel {
   controller: iTableController;
   private modal: iModal;
   private options: Array<adminPanelOption>;
-  private readonly startOption: universalTableOption;
+  private startOption: universalTableOption;
   private createOptionKit: createOptionKitAP;
   private dropdownContainer: HTMLElement;
   private appearanceOptions: Array<adminPanelOption>;
@@ -28,6 +28,60 @@ export class AdminPanel implements iAdminPanel {
   private defaultOptions: {[key: string]: any}
   private adminPanel: HTMLElement
   constructor() {
+    this.name = "adminPanel";
+    this.state$ = new Observable<PLUGIN_STATE>(PLUGIN_STATE.INITIALIZED);
+  }
+
+  registration(controller: iTableController) {
+    this.controller = controller;
+    this.state$.next(PLUGIN_STATE.ADDED);
+    this.state$.next(PLUGIN_STATE.PENDING);
+    this.state$.subscribe(() => {
+      controller.pluginEvent$.next(this);
+    });
+    if (this.controller.getPlugin("modal").plugin?.state$.getValue() === PLUGIN_STATE.READY) {
+      this.init();
+      this.state$.next(PLUGIN_STATE.READY);
+    } else {
+      this.controller.pluginEvent$.subscribe((event) => {
+        if (event.name === "adminPanel") return;
+
+        let modalInfo = this.controller.getPlugin("modal");
+        if (!modalInfo.isPresent) return;
+        if (modalInfo.plugin.state$.getValue() === PLUGIN_STATE.READY && (this.state$.getValue() !== PLUGIN_STATE.READY && this.state$.getValue() !== PLUGIN_STATE.REMOVED)) {
+          this.init();
+          this.state$.next(PLUGIN_STATE.READY);
+        }
+      });
+    }
+    this.controller.pluginEvent$.subscribe((event: iPlugin) => {
+      if (event.name === "adminPanel") return;
+      if (this.controller.getPlugin("modal").plugin?.state$.getValue() !== PLUGIN_STATE.READY) {
+        if (this.state$.getValue() === PLUGIN_STATE.PENDING) return;
+        this.unload()
+        this.state$.next(PLUGIN_STATE.PENDING);
+      }
+    });
+  }
+
+  private init() {
+    this.initStartOptions()
+    this.initOptions()
+    this.renderOpenPanel();
+    this.initCreatePack()
+    if (this.startOption) {
+      this.options.forEach((item) => {
+        item.options.startValue = (this.startOption as any)[item.correspondence];
+      });
+    }
+    let modalPlugin = this.controller.getPlugin("modal").plugin as iModalPlugin;
+    this.adminPanel = this.createAdminPanel();
+
+    this.modal = modalPlugin.createModal(this.adminPanel);
+    this.modal.close$.subscribe(() => this.dropdownContainer.style.display = "flex");
+    this.modal.setOptions({ padding: "0px", borderRadius: "10px" });
+  }
+  private initStartOptions(){
     let startOption = localStorage.getItem("tableCell");
     let startDenyPlugin = localStorage.getItem("denyPlugin");
     if (startOption) {
@@ -37,9 +91,6 @@ export class AdminPanel implements iAdminPanel {
         this.startOption = { ...JSON.parse(startOption), denyPlugins: [] };
       }
     }
-
-    this.name = "adminPanel";
-    this.state$ = new Observable<PLUGIN_STATE>(PLUGIN_STATE.INITIALIZED);
     this.defaultOptions = {
       "widthVerticalLine": "1px",
       "widthHorizontalLine": "1px",
@@ -58,6 +109,50 @@ export class AdminPanel implements iAdminPanel {
       showHeader: true,
       showFooter: true
     };
+  }
+  private initOptions(){
+    this.appearanceOptions = [
+      this.createCheckBoxOption("Показывать вертикальные линии", true, 'showVerticalLine'),
+      this.createCheckBoxOption("Показывать горизонтальные линии", true, 'showHorizontalLine'),
+      this.createCheckBoxOption("Показывать заголовок таблицы", true, 'showHeader'),
+      this.createCheckBoxOption("Показывать футер таблицы", true, 'showFooter'),
+      this.createInputOption("Толщина вертикальной линии", "1px", 'widthVerticalLine', "^\\d{1,}(px|em)$"),
+      this.createInputOption("Толщина горизонтальной линии", "1px", 'widthHorizontalLine', "^\\d{1,}(px|em)$"),
+      this.createColorOption("Цвет фона заголовка", "#FFFFFF", 'colorBackgroundHeader'),
+      this.createColorOption("Цвет фона ячеек", "#FFFFFF", 'colorBackgroundCell'),
+      this.createColorOption("Цвет фона футера", "#F2F2F2", 'colorBackgroundFooter'),
+      this.createColorOption("Цвет текста заголовков", "#000000", 'colorHeader'),
+      this.createColorOption("Цвет текста ячеек", "#000000", 'colorBody'),
+      this.createColorOption("Цвет текста футера", "#000000", 'colorFooter'),
+      this.createColorOption("Цвет фона редактируемой ячейки", "#FFFFFF", 'colorEditableBackgroundCell'),
+      this.createColorOption("Цвет текста редактируемой ячейки", "#000000", 'colorEditableCell'),
+      this.createColorOption("Цвет линий таблицы", "#000000", 'colorLine')
+    ];
+    this.actionOptions = [
+      this.createCheckBoxOption("Запретить редактирование ячеек", false, 'denyEditCell'),
+      this.createCheckBoxOption("Запретить изменение размера столбцов", false, 'denyResizeColumn'),
+      this.createCheckBoxOption("Запретить добавление столбцов", false, 'denyAddColumn'),
+      this.createCheckBoxOption("Запретить добавление строк", false, 'denyAddRow'),
+      this.createCheckBoxOption("Запретить удаление столбцов", false, 'denyRemoveColumn'),
+      this.createCheckBoxOption("Запретить удаление строк", false, 'denyRemoveRow'),
+      this.createactionListOption(
+        "Список запрещёных плагинов:",
+        [],
+        "Запретить плагин: ",
+        "Запретить",
+        "red",
+        (actionList: IactionList) => {
+          actionList.elements$.subscribe((data) => {
+            this.controller.denyPlugins$.next(data);
+          });
+          this.options.find((item) => item.correspondence === "denyPlugins").elementObject = actionList;
+        },
+        'denyPlugins'
+      )
+    ];
+    this.options = [...this.appearanceOptions, ...this.actionOptions];
+  }
+  private initCreatePack(){
     this.createOptionKit = {
       input: (options: toKitOption) => {
         let option = createElement("div", ["input_option"]);
@@ -102,209 +197,61 @@ export class AdminPanel implements iAdminPanel {
 
         return option;
       },
-      userList: (options: toKitOption) => {
-        let userList = new UserList(options.placeholder, options.startValue as Array<string>, options.inputOverview, options.buttonOverview);
+      actionList: (options: toKitOption) => {
+        let actionList = new ActionList(options.placeholder, options.startValue as Array<string>, options.inputOverview, options.buttonOverview);
         if (options.registerCallback) {
-          options.registerCallback(userList);
+          options.registerCallback(actionList);
         }
-        let element = userList.createList();
+        let element = actionList.createList();
         if (options.color) {
-          userList.setTextColor(options.color);
+          actionList.setTextColor(options.color);
         }
         return element;
       }
     };
-    this.appearanceOptions = [
-      {
-        type: "checkBox",
-        options: { placeholder: "Показывать вертикальные линии", startValue: true },
-        correspondence: "showVerticalLine"
-      },
-      {
-        type: "checkBox",
-        options: { placeholder: "Показывать горизонтальные линии", startValue: true },
-        correspondence: "showHorizontalLine"
-      },
-      {
-        type: "checkBox",
-        options: { placeholder: "Показывать заголовок таблицы", startValue: true },
-        correspondence: "showHeader"
-      },
-      {
-        type: "checkBox",
-        options: { placeholder: "Показывать футер таблицы", startValue: true },
-        correspondence: "showFooter"
-      },
-      {
-        type: "input",
-        options: { placeholder: "Толища вертикальной линии", startValue: "1px" },
-        regExp: "^\\d{1,}(px|em)$",
-        correspondence: "widthVerticalLine"
-      },
-      {
-        type: "input",
-        options: { placeholder: "Толища горизонтальной линии", startValue: "1px" },
-        regExp: "^\\d{1,}(px|em)$",
-        correspondence: "widthHorizontalLine"
-      },
-      {
-        type: "color",
-        options: { placeholder: "Цвет фона заголовка", startValue: "#FFFFFF" },
-        regExp: "^#[0-9A-Fa-f]{6}$",
-        correspondence: "colorBackgroundHeader"
-      },
-      {
-        type: "color",
-        options: { placeholder: "Цвет фона ячеек", startValue: "#FFFFFF" },
-        regExp: "^#[0-9A-Fa-f]{6}$",
-        correspondence: "colorBackgroundCell"
-      },
-      {
-        type: "color",
-        options: { placeholder: "Цвет фона футера", startValue: "#F2F2F2" },
-        regExp: "^#[0-9A-Fa-f]{6}$",
-        correspondence: "colorBackgroundFooter"
-      },
-      {
-        type: "color",
-        options: { placeholder: "Цвет текста заголовков", startValue: "#000000" },
-        regExp: "^#[0-9A-Fa-f]{6}$",
-        correspondence: "colorHeader"
-      },
-      {
-        type: "color",
-        options: { placeholder: "Цвет текста ячеек", startValue: "#000000" },
-        regExp: "^#[0-9A-Fa-f]{6}$",
-        correspondence: "colorBody"
-      },
-      {
-        type: "color",
-        options: { placeholder: "Цвет текста футера", startValue: "#000000" },
-        regExp: "^#[0-9A-Fa-f]{6}$",
-        correspondence: "colorFooter"
-      },
-      {
-        type: "color",
-        options: { placeholder: "Цвет фона редактируемой ячейки", startValue: "#FFFFFF" },
-        regExp: "^#[0-9A-Fa-f]{6}$",
-        correspondence: "colorEditableBackgroundCell"
-      },
-      {
-        type: "color",
-        options: { placeholder: "Цвет текста редактируемой ячейки", startValue: "#000000" },
-        regExp: "^#[0-9A-Fa-f]{6}$",
-        correspondence: "colorEditableCell"
-      },
-      {
-        type: "color",
-        options: { placeholder: "Цвет линий таблицы", startValue: "#000000" },
-        regExp: "^#[0-9A-Fa-f]{6}$",
-        correspondence: "colorLine"
-      }
-
-    ];
-    this.actionOptions = [
-      {
-        type: "checkBox",
-        options: { placeholder: "Запретить редактирование ячеек", startValue: false },
-        correspondence: "denyEditCell"
-      },
-      {
-        type: "checkBox",
-        options: { placeholder: "Запретить изменение размера столбцов", startValue: false },
-        correspondence: "denyResizeColumn"
-      },
-      {
-        type: "checkBox",
-        options: { placeholder: "Запретить добавление столбцов", startValue: false },
-        correspondence: "denyAddColumn"
-      },
-      {
-        type: "checkBox",
-        options: { placeholder: "Запретить добавление строк", startValue: false },
-        correspondence: "denyAddRow"
-      },
-      {
-        type: "checkBox",
-        options: { placeholder: "Запретить удаление столбцов", startValue: false },
-        correspondence: "denyRemoveColumn"
-      },
-      {
-        type: "checkBox",
-        options: { placeholder: "Запретить удаление строк", startValue: false },
-        correspondence: "denyRemoveRow"
-      },
-      {
-        type: "userList",
-        options:
-          {
-            placeholder: "Список запрещёных плагинов:",
-            startValue: [],
-            inputOverview: "Запретить плагин: ",
-            buttonOverview: "Запретить",
-            color: "red",
-            registerCallback: (userList: IUserList) => {
-              userList.elements$.subscribe((data) => {
-                this.controller.denyPlugins$.next(data);
-              });
-              this.options.find((item) => item.correspondence === "denyPlugins").elementObject = userList;
-            }
-          },
-        
-        correspondence: "denyPlugins"
-
-      }
-    ];
-    this.options = [...this.appearanceOptions, ...this.actionOptions];
   }
-
-  registration(controller: iTableController) {
-    this.controller = controller;
-    this.state$.next(PLUGIN_STATE.ADDED);
-    this.state$.next(PLUGIN_STATE.PENDING);
-    this.state$.subscribe(() => {
-      controller.pluginEvent$.next(this);
-    });
-    if (this.controller.getPlugin("modal").plugin?.state$.getValue() === PLUGIN_STATE.READY) {
-      this.init();
-      this.state$.next(PLUGIN_STATE.READY);
-    } else {
-      this.controller.pluginEvent$.subscribe((event) => {
-        if (event.name === "adminPanel") return;
-
-        let modalInfo = this.controller.getPlugin("modal");
-        if (!modalInfo.isPresent) return;
-        if (modalInfo.plugin.state$.getValue() === PLUGIN_STATE.READY && (this.state$.getValue() !== PLUGIN_STATE.READY && this.state$.getValue() !== PLUGIN_STATE.REMOVED)) {
-          this.init();
-          this.state$.next(PLUGIN_STATE.READY);
-        }
-      });
+  private createCheckBoxOption(placeholder:string, startValue:boolean, correspondence:string){
+    return {
+      type: 'checkBox',
+      options: {
+        placeholder: placeholder,
+        startValue: startValue,
+      },
+      correspondence: correspondence,
     }
-    this.controller.pluginEvent$.subscribe((event: iPlugin) => {
-      if (event.name === "adminPanel") return;
-      if (this.controller.getPlugin("modal").plugin?.state$.getValue() !== PLUGIN_STATE.READY) {
-        if (this.state$.getValue() === PLUGIN_STATE.PENDING) return;
-        this.unload()
-        this.state$.next(PLUGIN_STATE.PENDING);
-      }
-    });
   }
-
-  private init() {
-    this.renderOpenPanel();
-    if (this.startOption) {
-      this.options.forEach((item) => {
-        item.options.startValue = (this.startOption as any)[item.correspondence];
-      });
+  private createInputOption(placeholder:string, startValue:string, correspondences:string, regExp: string):adminPanelOption{
+    return {
+      type: 'input',
+      options: { placeholder: placeholder, startValue: startValue },
+      regExp: regExp,
+      correspondence: correspondences
     }
-    let modalPlugin = this.controller.getPlugin("modal").plugin as iModalPlugin;
-    this.adminPanel = this.createAdminPanel();
-
-    this.modal = modalPlugin.createModal(this.adminPanel);
-    this.modal.close$.subscribe(() => this.dropdownContainer.style.display = "flex");
-    this.modal.setOptions({ padding: "0px", borderRadius: "10px" });
   }
+  private createColorOption(placeholder:string, startValue:string, correspondence:string):adminPanelOption {
+    return {
+      type: 'color',
+      options: { placeholder: placeholder, startValue: startValue},
+      regExp: "^#[0-9A-Fa-f]{6}$",
+      correspondence: correspondence
+    }
+  }
+  private createactionListOption(placeholder:string, startValue:Array<string>, inputOverview:string, buttonOverview:string, color:string, registerCallback: Function, correspondence:string){
+    return {
+      type: "actionList",
+      options:
+        {
+          placeholder: placeholder,
+          startValue: startValue,
+          inputOverview: inputOverview,
+          buttonOverview: buttonOverview,
+          color: color,
+          registerCallback: registerCallback
+        },
 
+      correspondence: correspondence
+    }
+  }
   private renderOpenPanel() {
     let dropdownContainer = createElement("div", ["dropdown-container"]);
     this.dropdownContainer = dropdownContainer;
@@ -445,7 +392,7 @@ export class AdminPanel implements iAdminPanel {
         value = (this.options[i].element.children[1] as HTMLInputElement).value;
       } else if (this.options[i].type === "checkBox") {
         value = (this.options[i].element.children[1] as HTMLInputElement).checked;
-      } else if (this.options[i].type === "userList") {
+      } else if (this.options[i].type === "actionList") {
         value = this.options[i].elementObject.elements$.getValue();
       }
       (resultOptions as any)[this.options[i].correspondence] = value;
@@ -463,7 +410,7 @@ export class AdminPanel implements iAdminPanel {
         } else if (input.type === "checkBox") {
           const inputElement = input.element.children[1] as HTMLInputElement;
           inputElement.checked = (options as any)[key] as boolean;
-        } else if (input.type === "userList") {
+        } else if (input.type === "actionList") {
           input.elementObject.setList((options as any)[key]);
         }
       }

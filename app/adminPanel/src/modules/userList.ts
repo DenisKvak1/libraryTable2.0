@@ -1,9 +1,9 @@
 import { createElement } from "../../../../env/helpers/createDOMElements";
 import { appendChild } from "../../../../env/helpers/appendRemoveChildDOMElements";
-import { iObservable, IUserList } from "../../../../env/types";
+import { iObservable, IactionList } from "../../../../env/types";
 import { Observable } from "../../../../env/helpers/observable";
 
-export class UserList implements IUserList {
+export class ActionList implements IactionList {
   private overview: string;
   private infoBlock: HTMLElement;
   private infoRect: HTMLElement;
@@ -22,7 +22,7 @@ export class UserList implements IUserList {
   }
 
   createList(): HTMLElement {
-    const rootElement = createElement("div", ["userListRoot"]);
+    const rootElement = createElement("div", ["actionListRoot"]);
 
     this.infoBlock = createElement("div", ["infoBlock"]);
     let info = createElement("div", ["info"]);
