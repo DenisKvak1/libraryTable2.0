@@ -7,9 +7,9 @@ import {
   iTableController,
   PluginList,
   tableData
-} from "../../../../env/types";
-import {Table} from "./Table";
-import {Observable} from "../../../../env/helpers/observable";
+} from "../../../env/types";
+import {Table} from "./modules/table/Table";
+import {Observable} from "../../../env/helpers/observable";
 
 export class TableController implements iTableController{
   table: iTable

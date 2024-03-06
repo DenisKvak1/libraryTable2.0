@@ -33,7 +33,7 @@ export class ErrorProcessing implements iErrorProcessing{
         let errorItem = createElement('h3',['errorText'])
         errorItem.innerHTML = error
 
-        let modal = modalPlug.createModal(errorItem, true)
+        let modal = modalPlug.createModal(errorItem)
         modal.open()
       }
     })

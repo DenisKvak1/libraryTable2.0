@@ -150,7 +150,7 @@ export type IPluginInfo = {
 }
 export type iErrorProcessing = iPlugin & {}
 export type iModalPlugin = iPlugin & {
-  createModal: (content: string | Element, destroyMode?: boolean) => iModal
+  createModal: (content: string | Element) => iModal
 }
 export type iChartControl = iPlugin & {}
 export type iChartPlugin = iPlugin & {

@@ -10,76 +10,76 @@ import {
     iTableController,
     PLUGIN_STATE
 } from "../../../env/types";
-import {Observable} from "../../../env/helpers/observable";
-import {appendChild} from "../../../env/helpers/appendRemoveChildDOMElements";
-import {createElement} from "../../../env/helpers/createDOMElements";
+import { Observable } from "../../../env/helpers/observable";
+import { appendChild } from "../../../env/helpers/appendRemoveChildDOMElements";
+import { createElement } from "../../../env/helpers/createDOMElements";
+import { createElementFromHTML } from "../../../env/helpers/createElementFromHTML";
+import { controlPanelTemplate, createChartTemplate } from "./template/template";
 
 export class ChartControl implements iChartControl {
     name: string;
     controller: iTableController;
     modal: iModal;
-    state$: iObservable<PLUGIN_STATE>
+    state$: iObservable<PLUGIN_STATE>;
 
     constructor() {
         this.name = "chartControl";
-        this.state$ = new Observable<PLUGIN_STATE>(PLUGIN_STATE.INITIALIZED)
+        this.state$ = new Observable<PLUGIN_STATE>(PLUGIN_STATE.INITIALIZED);
     }
 
     registration(controller: iTableController) {
-        this.controller = controller
-        this.state$.next(PLUGIN_STATE.ADDED)
-        this.state$.next(PLUGIN_STATE.PENDING)
+        this.controller = controller;
+        this.state$.next(PLUGIN_STATE.ADDED);
+        this.state$.next(PLUGIN_STATE.PENDING);
 
-        if (this.controller.getPlugin('modal').plugin?.state$.getValue() === PLUGIN_STATE.READY && this.controller.getPlugin('chart').plugin?.state$.getValue() === PLUGIN_STATE.READY) {
-            this.renderChartControl()
-            this.state$.next(PLUGIN_STATE.READY)
+        if (this.controller.getPlugin("modal").plugin?.state$.getValue() === PLUGIN_STATE.READY && this.controller.getPlugin("chart").plugin?.state$.getValue() === PLUGIN_STATE.READY) {
+            this.renderChartControl();
+            this.state$.next(PLUGIN_STATE.READY);
         } else {
             this.controller.pluginEvent$.subscribe((event) => {
-                if (event.name === "chartControl") return
-                let modalInfo = this.controller.getPlugin('modal')
-                let chartInfo = this.controller.getPlugin('chart')
-                if (!modalInfo.isPresent) return
+                if (event.name === "chartControl") return;
+                let modalInfo = this.controller.getPlugin("modal");
+                let chartInfo = this.controller.getPlugin("chart");
+                if (!modalInfo.isPresent) return;
                 if (!chartInfo.isPresent) return;
                 if (modalInfo.plugin.state$.getValue() === PLUGIN_STATE.READY && chartInfo.plugin.state$.getValue() === PLUGIN_STATE.READY && this.state$.getValue() !== PLUGIN_STATE.READY) {
-                    this.renderChartControl()
-                    this.state$.next(PLUGIN_STATE.READY)
+                    this.renderChartControl();
+                    this.state$.next(PLUGIN_STATE.READY);
                 }
-            })
+            });
         }
         this.controller.pluginEvent$.subscribe((event: iPlugin) => {
-            if (event.name === "chartControl") return
-            if (this.controller.getPlugin('modal').plugin?.state$.getValue() !== PLUGIN_STATE.READY || this.controller.getPlugin('chart').plugin?.state$.getValue() !== PLUGIN_STATE.READY) {
-                if(this.state$.getValue() === PLUGIN_STATE.PENDING) return;
-                this.unload()
-                this.state$.next(PLUGIN_STATE.PENDING)
+            if (event.name === "chartControl") return;
+            if (this.controller.getPlugin("modal").plugin?.state$.getValue() !== PLUGIN_STATE.READY || this.controller.getPlugin("chart").plugin?.state$.getValue() !== PLUGIN_STATE.READY) {
+                if (this.state$.getValue() === PLUGIN_STATE.PENDING) return;
+                this.unload();
+                this.state$.next(PLUGIN_STATE.PENDING);
             }
-        })
-        this.state$.subscribe(()=>{
-            this.controller.pluginEvent$.next(this)
-        })
+        });
+        this.state$.subscribe(() => {
+            this.controller.pluginEvent$.next(this);
+        });
     }
 
 
     private renderChartControl() {
-        let createChartContainer = createElement("div", ["createChartContainer"]);
-        let buttonChart = createElement("button", ["createChartButton"]);
-        let inputChart: HTMLInputElement = createElement("input", ["createChartInput"]) as HTMLInputElement;
+        let createChartContainer = createElementFromHTML(createChartTemplate);
+        let buttonChart = createChartContainer.querySelector("button");
+        let inputChart: HTMLInputElement = createChartContainer.querySelector("input");
 
         let modalPluginInfo = this.controller.getPlugin("modal");
         let chartPluginInfo = this.controller.getPlugin("chart");
 
         let modalPlugin: iModalPlugin = modalPluginInfo.plugin as iModalPlugin;
         let chartPlugin: iChartPlugin = chartPluginInfo.plugin as iChartPlugin;
-        let chart: iChart = chartPlugin.createChart({data: [], header: []});
+        let chart: iChart = chartPlugin.createChart({ data: [], header: [] });
         let modalContainer = createElement("div");
-        let controlPanel = createElement("div", ["controlPanel"]);
-        let setColumnChart = createElement("button");
-        setColumnChart.innerHTML = "Column";
-        let setLineChart = createElement("button");
-        setLineChart.innerHTML = "Line";
 
-        setLineChart.onclick = () => chart.setChartType(ChartType.LINE)
-        setColumnChart.onclick = () => chart.setChartType(ChartType.COLUMN)
+        let controlPanel = createElementFromHTML(controlPanelTemplate);
+        let setLineChart: HTMLElement = controlPanel.querySelector(".lineCH");
+        let setColumnChart: HTMLElement = controlPanel.querySelector(".columnCH");
+        setLineChart.onclick = () => chart.setChartType(ChartType.LINE);
+        setColumnChart.onclick = () => chart.setChartType(ChartType.COLUMN);
 
         appendChild(controlPanel, setLineChart);
         appendChild(controlPanel, setColumnChart);
@@ -99,23 +99,23 @@ export class ChartControl implements iChartControl {
             chart.setChartData(chartData.data, chartData.header);
             this.modal.open();
         };
-        buttonChart.innerHTML = "Нарисовать график";
         appendChild(createChartContainer, buttonChart);
         appendChild(createChartContainer, inputChart);
         this.controller.table.tableElement.insertAdjacentElement("afterend", createChartContainer);
     }
 
     unRegister() {
-        this.state$.next(PLUGIN_STATE.REMOVED)
-        this.unload()
+        this.state$.next(PLUGIN_STATE.REMOVED);
+        this.unload();
     }
-    unload(){
-        let buttonAction = this.controller.table.tableElement.parentNode.querySelector(".createChartContainer")
+
+    unload() {
+        let buttonAction = this.controller.table.tableElement.parentNode.querySelector(".createChartContainer");
         if (buttonAction) {
-            buttonAction.remove()
+            buttonAction.remove();
         }
         if (this.modal) {
-            this.modal.destroy()
+            this.modal.destroy();
         }
     }
 }

@@ -1,5 +1,5 @@
-import { Table } from "./modules/Table";
-import { TableController } from "./modules/tableController"
+import { Table } from "./modules/table/Table";
+import { TableController } from "./tableController"
 import "./style.css";
 import { ErrorProcessing } from "../../errorProcessing/src/index"
 import { ModalPlugin } from "../../ModalPlugin/src/index"

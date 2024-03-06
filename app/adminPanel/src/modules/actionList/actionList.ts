@@ -1,11 +1,11 @@
-import { createElement } from "../../../../env/helpers/createDOMElements";
-import { appendChild } from "../../../../env/helpers/appendRemoveChildDOMElements";
-import { iObservable, IactionList } from "../../../../env/types";
-import { Observable } from "../../../../env/helpers/observable";
+import { appendChild } from "../../../../../env/helpers/appendRemoveChildDOMElements";
+import { iObservable, IactionList } from "../../../../../env/types";
+import { Observable } from "../../../../../env/helpers/observable";
+import { createElementFromHTML } from "../../../../../env/helpers/createElementFromHTML";
+import { adminPanelInfoListItem, adminPanelUserList } from "./template";
 
 export class ActionList implements IactionList {
   private overview: string;
-  private infoBlock: HTMLElement;
   private infoRect: HTMLElement;
   elements$: iObservable<Array<string>>;
   buttonOverview: string;
@@ -22,15 +22,13 @@ export class ActionList implements IactionList {
   }
 
   createList(): HTMLElement {
-    const rootElement = createElement("div", ["actionListRoot"]);
+    const rootElement = createElementFromHTML(adminPanelUserList)
 
-    this.infoBlock = createElement("div", ["infoBlock"]);
-    let info = createElement("div", ["info"]);
-    this.infoRect = createElement("div", ["infoRect"]);
-    let addCont = createElement("div", ["infoAddCont"]);
-    let addOverview = createElement("span", ["infoAddSpan"]);
-    let addInput = createElement("input") as HTMLInputElement;
-    let addBtn = createElement("button");
+    let info = rootElement.querySelector('.info');
+    this.infoRect = rootElement.querySelector('.infoRect')
+    let addOverview = rootElement.querySelector('.infoAddSpan')
+    let addInput = rootElement.querySelector('input')
+    let addBtn = rootElement.querySelector('button')
 
     addBtn.onclick = () => {
       if (addInput.value) {
@@ -44,17 +42,10 @@ export class ActionList implements IactionList {
     addBtn.textContent = this.buttonOverview;
     addOverview.textContent = this.inputOverview;
 
-    appendChild(addCont, addOverview);
-    appendChild(addCont, addInput);
-    appendChild(addCont, addBtn);
+
     info.textContent = this.overview;
 
     this.setList(this.elements$.getValue());
-
-    appendChild(this.infoBlock, info);
-    appendChild(this.infoBlock, this.infoRect);
-    appendChild(rootElement, this.infoBlock);
-    appendChild(rootElement, addCont);
 
     return rootElement;
   }
@@ -68,9 +59,9 @@ export class ActionList implements IactionList {
   }
 
   private renderElement(element: string): void {
-    let container = createElement("div", ["listItem"]);
-    let span = createElement("span");
-    let closeBtn = createElement("button", ["closeButton"]);
+    let container = createElementFromHTML(adminPanelInfoListItem);
+    let span = container.querySelector('span')
+    let closeBtn = container.querySelector('.closeButton') as HTMLButtonElement
     closeBtn.onclick = () => {
       this.elements$.next(this.elements$.getValue().filter((item) => item !== span.textContent));
       container.remove();
@@ -78,8 +69,6 @@ export class ActionList implements IactionList {
     closeBtn.innerHTML =
       "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path d=\"M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z\"/></svg>";
     span.textContent = element as string;
-    appendChild(container, span);
-    appendChild(container, closeBtn);
     appendChild(this.infoRect, container);
   }
 

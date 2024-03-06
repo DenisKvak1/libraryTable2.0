@@ -1,7 +1,7 @@
 import { iModal, iModalPlugin, iObservable, iTableController, PLUGIN_STATE} from "../../../env/types";
 import { Observable } from "../../../env/helpers/observable";
 // @ts-ignore
-import {Modal} from "./modules/Modal";
+import {Modal} from "./modules/modal/Modal";
 
 export class ModalPlugin implements iModalPlugin {
   state$: iObservable<PLUGIN_STATE>
@@ -25,8 +25,8 @@ export class ModalPlugin implements iModalPlugin {
     })
     this.state$.next(PLUGIN_STATE.READY)
   };
-  createModal(content:string | Element, destroyMode:boolean = false):iModal {
-    let modal = new Modal(content, null, destroyMode);
+  createModal(content:string | Element):iModal {
+    let modal = new Modal(content, null);
     this.modals.push(modal)
     return modal
   }

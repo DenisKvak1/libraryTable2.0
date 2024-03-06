@@ -8,11 +8,18 @@ import {
   PLUGIN_STATE, toKitOption,
   universalTableOption
 } from "../../../env/types";
-import { createElement } from "../../../env/helpers/createDOMElements";
 import { Observable } from "../../../env/helpers/observable";
-import { InfoList } from "./modules/infoList";
+import { InfoList } from "./modules/infoList/infoList";
 import { appendChild } from "../../../env/helpers/appendRemoveChildDOMElements";
-import { ActionList } from "./modules/userList";
+import { ActionList } from "./modules/actionList/actionList";
+import { createElementFromHTML } from "../../../env/helpers/createElementFromHTML";
+import {
+  adminPanelDropdown,
+  adminPanelOptionCheckBox,
+  adminPanelOptionColor,
+  adminPanelOptionInput,
+  adminPanelTemplate
+} from "./template/template";
 
 export class AdminPanel implements iAdminPanel {
   name: string;
@@ -135,7 +142,8 @@ export class AdminPanel implements iAdminPanel {
       this.createCheckBoxOption("Запретить добавление строк", false, 'denyAddRow'),
       this.createCheckBoxOption("Запретить удаление столбцов", false, 'denyRemoveColumn'),
       this.createCheckBoxOption("Запретить удаление строк", false, 'denyRemoveRow'),
-      this.createactionListOption(
+
+      this.createActionListOption(
         "Список запрещёных плагинов:",
         [],
         "Запретить плагин: ",
@@ -155,9 +163,9 @@ export class AdminPanel implements iAdminPanel {
   private initCreatePack(){
     this.createOptionKit = {
       input: (options: toKitOption) => {
-        let option = createElement("div", ["input_option"]);
-        let span = createElement("span");
-        let input = createElement("input") as HTMLInputElement;
+        let option = createElementFromHTML(adminPanelOptionInput)
+        let span = option.querySelector('span');
+        let input = option.querySelector('input')
         input.oninput = () => this.saveOptions.bind(this)();
         span.textContent = options.placeholder;
 
@@ -170,9 +178,9 @@ export class AdminPanel implements iAdminPanel {
         return option;
       },
       checkBox: (options: toKitOption) => {
-        let option = createElement("div", ["checkBox_option"]);
-        let span = createElement("span");
-        let input = createElement("input", ["checkBox_optionInput"]) as HTMLInputElement;
+        let option = createElementFromHTML(adminPanelOptionCheckBox)
+        let span = option.querySelector('span');
+        let input = option.querySelector('input')
         input.type = "checkbox";
         span.textContent = options.placeholder;
         input.checked = options.startValue as boolean;
@@ -184,9 +192,9 @@ export class AdminPanel implements iAdminPanel {
         return option;
       },
       color: (options: toKitOption) => {
-        let option = createElement("div", ["input_option"]);
-        let span = createElement("span");
-        let input = createElement("input", ["input_option"]) as HTMLInputElement;
+        let option = createElementFromHTML(adminPanelOptionColor)
+        let span = option.querySelector('span');
+        let input = option.querySelector('input')
         input.type = "color";
         span.textContent = options.placeholder;
         input.value = options.startValue as string;
@@ -236,7 +244,7 @@ export class AdminPanel implements iAdminPanel {
       correspondence: correspondence
     }
   }
-  private createactionListOption(placeholder:string, startValue:Array<string>, inputOverview:string, buttonOverview:string, color:string, registerCallback: Function, correspondence:string){
+  private createActionListOption(placeholder:string, startValue:Array<string>, inputOverview:string, buttonOverview:string, color:string, registerCallback: Function, correspondence:string){
     return {
       type: "actionList",
       options:
@@ -253,98 +261,58 @@ export class AdminPanel implements iAdminPanel {
     }
   }
   private renderOpenPanel() {
-    let dropdownContainer = createElement("div", ["dropdown-container"]);
-    this.dropdownContainer = dropdownContainer;
-    let content = createElement("div", ["content"]);
-    content.textContent = "Администрирование";
+    this.dropdownContainer = createElementFromHTML(adminPanelDropdown)
+    let content = this.dropdownContainer.querySelector('.content') as HTMLButtonElement
     content.onclick = () => {
       this.dropdownContainer.style.display = "none";
       this.modal.open();
     };
-    appendChild(dropdownContainer, content);
-    appendChild(document.body, dropdownContainer);
+    appendChild(this.dropdownContainer, content);
+    appendChild(document.body, this.dropdownContainer);
   }
 
-  private createAdminPanel() {
-    let adminPanel = createElement("div", ["admin_panel"]);
+  private createAdminPanel():HTMLElement {
+    const adminPanel = createElementFromHTML(adminPanelTemplate);
+    const selectOptionBlockBtn1:HTMLElement = adminPanel.querySelector('.selectOptionBlockBtn');
+    const selectOptionBlockBtn2:HTMLElement = adminPanel.querySelector('.selectOptionBlockBtn.noneActive');
+    const appearanceBlock:HTMLElement = adminPanel.querySelector('.option_block.appearance');
+    const actionBlock:HTMLElement = adminPanel.querySelector('.option_block.action');
 
-    let selectOption = createElement("div", ["select_Option"]);
-    let mainOption = createElement("div", ["main_Option"]);
-    let actionButtons = createElement("div", ["actionButton"]);
-    appendChild(adminPanel, selectOption);
-    appendChild(adminPanel, mainOption);
-    appendChild(adminPanel, actionButtons);
+    selectOptionBlockBtn1.addEventListener('click', () => {
+      appearanceBlock.style.display = 'flex';
+      actionBlock.style.display = 'none';
+      selectOptionBlockBtn1.classList.add('active');
+      selectOptionBlockBtn2.classList.remove('active');
+    });
 
-    let selectOptionBlockBtn1 = createElement("div", ["selectOptionBlockBtn"]);
-    let selectOptionBlockBtn2 = createElement("div", ["selectOptionBlockBtn"]);
-    selectOptionBlockBtn1.textContent = "Внешний вид";
-    selectOptionBlockBtn2.textContent = "Действие";
-    selectOptionBlockBtn1.classList.add("active");
+    selectOptionBlockBtn2.addEventListener('click', () => {
+      appearanceBlock.style.display = 'none';
+      actionBlock.style.display = 'flex';
+      selectOptionBlockBtn1.classList.remove('active');
+      selectOptionBlockBtn2.classList.add('active');
+    });
 
-    selectOptionBlockBtn1.onclick = () => {
-      if (!selectOptionBlockBtn1.classList.contains("active")) {
-        appearanceBlock.style.display = "flex";
-        actionBlock.style.display = "none";
-        selectOptionBlockBtn1.classList.toggle("active");
-        selectOptionBlockBtn2.classList.toggle("active");
-      }
-    };
-    selectOptionBlockBtn2.onclick = () => {
-      if (!selectOptionBlockBtn2.classList.contains("active")) {
-        appearanceBlock.style.display = "none";
-        actionBlock.style.display = "flex";
-        selectOptionBlockBtn1.classList.toggle("active");
-        selectOptionBlockBtn2.classList.toggle("active");
-      }
-    };
+    const actionBtn1 = adminPanel.querySelector('.actionBtn:nth-of-type(1)');
+    const actionBtn2 = adminPanel.querySelector('.actionBtn:nth-of-type(2)');
+    const fileInput = adminPanel.querySelector('.fileConfigInput');
 
-    appendChild(selectOption, selectOptionBlockBtn1);
-    appendChild(selectOption, selectOptionBlockBtn2);
+    actionBtn1.addEventListener('click', () => this.setOption(this.defaultOptions));
+    actionBtn2.addEventListener('click', () => this.saveJsonFile.bind(this)(JSON.stringify(this.toTableOptions())));
+    fileInput.addEventListener('change', (event) => this.loadHandler.bind(this)(event));
 
-    let appearanceBlock = createElement("div", ["option_block", "appearance"]);
-    let actionBlock = createElement("div", ["option_block", "action"]);
-    appendChild(mainOption, appearanceBlock);
-    appendChild(mainOption, actionBlock);
-
-    let actionBtn1 = createElement("button", ["actionBtn"]);
-    let actionBtn2 = createElement("button", ["actionBtn"]);
-    const form = createElement("form", ["confingForm"]);
-
-    actionBtn1.textContent = "По умолчанию";
-    actionBtn2.textContent = "Сохранить как";
-    actionBtn1.onclick = () => this.setOption(this.defaultOptions);
-    actionBtn2.onclick = () => {
-      this.saveJsonFile.bind(this)(JSON.stringify(this.toTableOptions()));
-    };
-    const fileInput = createElement("input", ["fileConfigInput"]) as HTMLInputElement;
-    fileInput.type = "file";
-    fileInput.id = "fileConfigInput";
-    fileInput.accept = ".json";
-    fileInput.onchange = (event) => this.loadHandler.bind(this)(event);
-
-    const label = createElement("label", ["actionBtn"]) as HTMLLabelElement;
-    label.htmlFor = "fileConfigInput";
-    label.textContent = "Загрузить";
-    appendChild(form, fileInput);
-    appendChild(form, label);
-
-    appendChild(actionButtons, actionBtn1);
-    appendChild(actionButtons, actionBtn2);
-    appendChild(actionButtons, form);
     this.renderOptions(appearanceBlock, this.appearanceOptions);
     this.renderOptions(actionBlock, this.actionOptions);
-    let blockInfo = new InfoList("Список установленных плагинов", []);
-    let blockInfoElement = blockInfo.createList();
+
+    const blockInfo = new InfoList('Список установленных плагинов', []);
+    const blockInfoElement = blockInfo.createList();
     this.controller.pluginEvent$.subscribe(() => {
-      let plugList: Array<string> = [];
-      for (let key in this.controller.plugins) {
-        if (this.controller.plugins[key] && this.controller.plugins[key].state$.getValue() !== PLUGIN_STATE.REMOVED) {
-          plugList.push(this.controller.plugins[key].name);
-        }
-      }
+      const plugList = Object.values(this.controller.plugins)
+        .filter(plugin => plugin && plugin.state$.getValue() !== PLUGIN_STATE.REMOVED)
+        .map(plugin => plugin.name);
       blockInfo.setList(plugList);
     });
-    appendChild(actionBlock, blockInfoElement);
+
+    actionBlock.appendChild(blockInfoElement);
     return adminPanel;
   }
 
@@ -467,7 +435,7 @@ export class AdminPanel implements iAdminPanel {
     }
     fileInput.value = "";
   }
-  unload(){
+  private unload(){
     this.adminPanel.remove()
     this.dropdownContainer.remove()
     this.modal.destroy()

@@ -8,12 +8,14 @@ import {
   IRowEvent,
   iTable,
   tableData, TableOptionFunc, universalTableOption, TableOptions
-} from "../../../../env/types";
-import { getElementById } from "../../../../env/helpers/getDOMElementById";
-import { Observable } from "../../../../env/helpers/observable";
-import { createElement } from "../../../../env/helpers/createDOMElements";
-import { appendChild } from "../../../../env/helpers/appendRemoveChildDOMElements";
-import TableCell, { insertRow } from "./tableCell";
+} from "../../../../../env/types";
+import { getElementById } from "../../../../../env/helpers/getDOMElementById";
+import { Observable } from "../../../../../env/helpers/observable";
+import { appendChild } from "../../../../../env/helpers/appendRemoveChildDOMElements";
+import TableCell, { insertRow } from "../tableCell/tableCell";
+import { createElementFromHTML } from "../../../../../env/helpers/createElementFromHTML";
+import { tableTemplate } from "./template";
+import { TableRow } from "../tableRow/tableRow";
 
 
 export class Table implements iTable {
@@ -107,10 +109,10 @@ export class Table implements iTable {
     if(tableOption){
       this.setOptions(JSON.parse(tableOption))
     }
-    this.tableElement = createElement("table", ["myTable"]);
-    const thead: HTMLElement = createElement("thead");
-    const tbody: HTMLElement = createElement("tbody");
-    const tfoot: HTMLElement = createElement("tfoot")
+    this.tableElement = createElementFromHTML(tableTemplate)
+    const thead: HTMLElement = this.tableElement.querySelector('thead');
+    const tbody: HTMLElement = this.tableElement.querySelector('tbody');
+    const tfoot: HTMLElement = this.tableElement.querySelector('tfoot')
 
     appendChild(this.tableElement, thead);
     appendChild(this.tableElement, tbody)
@@ -153,7 +155,6 @@ export class Table implements iTable {
         this.cell$.next({ x: event.x, y: index + 1, value: event.CellText });
         this.tableData.body.rows[index][event.x - 1] = event.CellText;
       });
-
       appendChild(this.tbodyElement, tr);
     }
 
@@ -376,67 +377,3 @@ export type iTableRow = {
   createRow: () => HTMLElement
 }
 
-export class TableRow implements iTableRow {
-  private readonly content: Array<string>;
-  private readonly type: string;
-  insertColumn$: iObservable<{ insertData: string, x: number, }>;
-  insertRow$: iObservable<insertRow>;
-  deleteColumn$: iObservable<{ x: number }>;
-  deleteRow$: iObservable<null>;
-  newValue$: iObservable<{ CellText: string, x: number }>;
-
-  constructor(type: string, content: Array<string>) {
-    this.type = type;
-    this.content = content;
-    this.insertColumn$ = new Observable<{ insertData: string, x: number, }>();
-    this.insertRow$ = new Observable<insertRow>();
-    this.deleteColumn$ = new Observable<{ x: number }>();
-    this.deleteRow$ = new Observable();
-    this.newValue$ = new Observable();
-  }
-
-  createRow(cellOption?: cellOptions): HTMLElement {
-    let option = {};
-    if (cellOption) {
-      option = cellOption;
-    }
-    const cellRow: HTMLElement = createElement("tr");
-    for (let index = 0; index < this.content.length; index++) {
-      const cellText: string = this.content[index];
-
-      let tableCell;
-      let tableCellElement: HTMLElement;
-
-      if (this.type === "header") {
-        tableCell = new TableCell(cellText, option);
-        tableCellElement = tableCell.createTh();
-      } else if (this.type === "body") {
-        if (index === 0) {
-          tableCell = new TableCell(cellText, option, true);
-        } else {
-          tableCell = new TableCell(cellText, option);
-        }
-        tableCellElement = tableCell.createTd();
-
-      }
-
-      if (tableCellElement instanceof HTMLElement) {
-        tableCell.newValue$.subscribe((cellText) => this.newValue$.next({ CellText: cellText, x: index + 1 }));
-        tableCell.insertColumn$.subscribe((event) => {
-          if (event.direction === "before") {
-            this.insertColumn$.next({ insertData: event.insertData, x: index + 1 });
-          } else if (event.direction === "after") {
-            this.insertColumn$.next({ insertData: event.insertData, x: index + 2 });
-          }
-        });
-        tableCell.insertRow$.subscribe((event: insertRow) => this.insertRow$.next({ direction: event.direction }));
-
-        tableCell.deleteRow$.subscribe(() => this.deleteRow$.next());
-        tableCell.deleteColumn$.subscribe(() => this.deleteColumn$.next({ x: index + 1 }));
-
-        appendChild(cellRow, tableCellElement);
-      }
-    }
-    return cellRow;
-  }
-}

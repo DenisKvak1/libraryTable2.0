@@ -1,6 +1,7 @@
-import { IInfoList } from "../../../../env/types";
-import { createElement } from "../../../../env/helpers/createDOMElements";
-import { appendChild } from "../../../../env/helpers/appendRemoveChildDOMElements";
+import { IInfoList } from "../../../../../env/types";
+import { appendChild } from "../../../../../env/helpers/appendRemoveChildDOMElements";
+import { createElementFromHTML } from "../../../../../env/helpers/createElementFromHTML";
+import { adminPanelInfoList, adminPanelInfoListItem } from "./template";
 
 export class InfoList implements IInfoList {
   private infoBlock: HTMLElement;
@@ -15,21 +16,19 @@ export class InfoList implements IInfoList {
   }
 
   createList() {
-    this.infoBlock = createElement("div", ["infoBlock"]);
-    this.info = createElement("div", ["info"]);
-    this.infoRect = createElement("div", ["infoRect"]);
+    this.infoBlock = createElementFromHTML(adminPanelInfoList)
+    this.info = this.infoBlock.querySelector('.info')
+    this.infoRect = this.infoBlock.querySelector('.infoRect')
     this.info.textContent = this.overview;
 
     this.renderList();
-    appendChild(this.infoBlock, this.info);
-    appendChild(this.infoBlock, this.infoRect);
     return this.infoBlock;
   }
 
   private renderList() {
     this.infoRect.innerHTML = "";
     for (let i = 0; i < this.elements.length; i++) {
-      const span = createElement("span");
+      const span = createElementFromHTML(adminPanelInfoListItem)
       span.textContent = this.elements[i] as string;
       appendChild(this.infoRect, span);
     }
