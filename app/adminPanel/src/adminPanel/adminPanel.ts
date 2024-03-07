@@ -7,19 +7,19 @@ import {
   iTableController, IactionList,
   PLUGIN_STATE, toKitOption,
   universalTableOption
-} from "../../../env/types";
-import { Observable } from "../../../env/helpers/observable";
-import { InfoList } from "./modules/infoList/infoList";
-import { appendChild } from "../../../env/helpers/appendRemoveChildDOMElements";
-import { ActionList } from "./modules/actionList/actionList";
-import { createElementFromHTML } from "../../../env/helpers/createElementFromHTML";
+} from "../../../../env/types";
+import { Observable } from "../../../../env/helpers/observable";
+import { InfoList } from "../modules/infoList/infoList";
+import { appendChild } from "../../../../env/helpers/appendRemoveChildDOMElements";
+import { ActionList } from "../modules/actionList/actionList";
+import { createElementFromHTML } from "../../../../env/helpers/createElementFromHTML";
 import {
   adminPanelDropdown,
   adminPanelOptionCheckBox,
   adminPanelOptionColor,
   adminPanelOptionInput,
   adminPanelTemplate
-} from "./template/template";
+} from "./template";
 
 export class AdminPanel implements iAdminPanel {
   name: string;
