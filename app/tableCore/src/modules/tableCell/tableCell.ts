@@ -288,7 +288,6 @@ export default class TableCell implements iTableCell {
     const textNode: HTMLElement = tdContainer.querySelector('.textNode');
     const tdPopperAddCont1: HTMLElement = tdContainer.querySelectorAll('.tdPopperAddCont')[0] as HTMLElement;
     const tdPopperAddCont2: HTMLElement = tdContainer.querySelectorAll('.tdPopperAddCont')[1] as HTMLElement;
-    const tdPopperRemoveCont1: HTMLElement = createElementFromHTML(tableCellTDRemoveBlock);
 
     tdContainer.addEventListener("mouseout", (event) => {
       event.stopPropagation();
@@ -299,7 +298,6 @@ export default class TableCell implements iTableCell {
 
     let tdPopperAdd1: HTMLElement;
     let tdPopperAdd2: HTMLElement;
-    let tdPopperRemove1: HTMLElement;
     let tdAddRowBtn: HTMLElement;
     let tdAddRowBtn2: HTMLElement;
     let tdRemoveRowBtn: HTMLElement;
@@ -325,8 +323,8 @@ export default class TableCell implements iTableCell {
       }
 
       if (!this.options.denyRemoveRow) {
-        tdPopperRemove1 = createElementFromHTML(tableCellTDRemoveBlock);
-        tdRemoveRowBtn = tdPopperRemove1.querySelector('.removeRowBtn');
+        const tdPopperRemoveCont1: HTMLElement = createElementFromHTML(tableCellTDRemoveBlock);
+        tdRemoveRowBtn = tdPopperRemoveCont1.querySelector('.removeRowBtn');
         tdRemoveRowBtn.onclick = () => {
           this.deleteRow$.next();
         };
@@ -337,8 +335,9 @@ export default class TableCell implements iTableCell {
     textNode.textContent = this.content;
     if (!this.options.denyEditCell) {
       textNode.contentEditable = "true";
+    } else  {
+      textNode.contentEditable = "false";
     }
-
     textNode.onblur = (event: Event) => this.cellChange(event);
     td.onmouseleave = this.cellChange;
     td.onmouseout = this.cellChange;
